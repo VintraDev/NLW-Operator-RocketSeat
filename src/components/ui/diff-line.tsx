@@ -1,0 +1,67 @@
+import * as React from "react";
+import { tv, type VariantProps } from "tailwind-variants";
+
+const diffLineVariants = tv({
+  base: "flex items-start gap-2 font-mono text-[13px] font-normal px-4 py-2 w-full",
+  variants: {
+    type: {
+      added: "bg-green-950/30 text-devroast-text-primary",
+      removed: "bg-red-950/30 text-devroast-text-primary",
+      context: "bg-transparent text-devroast-text-secondary",
+    },
+  },
+  defaultVariants: {
+    type: "context",
+  },
+});
+
+export interface DiffLineProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof diffLineVariants> {
+  code: string;
+  lineNumber?: number;
+}
+
+const DiffLine = React.forwardRef<HTMLDivElement, DiffLineProps>(
+  ({ className, type, code, lineNumber, ...props }, ref) => {
+    const getPrefix = () => {
+      switch (type) {
+        case "added":
+          return "+";
+        case "removed":
+          return "-";
+        case "context":
+        default:
+          return " ";
+      }
+    };
+
+    const getPrefixColor = () => {
+      switch (type) {
+        case "added":
+          return "text-devroast-green";
+        case "removed":
+          return "text-devroast-red";
+        case "context":
+        default:
+          return "text-devroast-text-muted";
+      }
+    };
+
+    return (
+      <div
+        ref={ref}
+        className={diffLineVariants({ className, type })}
+        {...props}
+      >
+        <span className={`select-none min-w-[1ch] ${getPrefixColor()}`}>
+          {getPrefix()}
+        </span>
+        <span className="flex-1">{code}</span>
+      </div>
+    );
+  },
+);
+DiffLine.displayName = "DiffLine";
+
+export { DiffLine, diffLineVariants };
