@@ -32,8 +32,129 @@ const initialCode = `function calculateTotal(items) {
   return total;
 }`;
 
+const longCode = `// DevRoast - Code Review Application
+function calculateTotal(items) {
+  var total = 0;
+  for (let i = 0; i < items.length; i++) {
+    total += items[i].price * items[i].quantity;
+  }
+  
+  if (total > 100) {
+    total = total * 0.9; // apply 10% discount
+    console.log("Discount applied");
+  }
+  
+  return total;
+}
+
+class ShoppingCart {
+  constructor() {
+    this.items = [];
+    this.discount = 0;
+  }
+  
+  addItem(product, quantity) {
+    const existingItem = this.items.find(item => item.product.id === product.id);
+    
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      this.items.push({ product, quantity });
+    }
+  }
+  
+  removeItem(productId) {
+    this.items = this.items.filter(item => item.product.id !== productId);
+  }
+  
+  getTotal() {
+    const subtotal = this.items.reduce((sum, item) => {
+      return sum + (item.product.price * item.quantity);
+    }, 0);
+    
+    return subtotal - (subtotal * this.discount);
+  }
+  
+  applyDiscount(percentage) {
+    this.discount = Math.min(percentage, 0.5); // Max 50% discount
+  }
+  
+  // More methods to make this longer
+  getItems() {
+    return this.items;
+  }
+  
+  clearCart() {
+    this.items = [];
+    this.discount = 0;
+  }
+  
+  getItemCount() {
+    return this.items.reduce((count, item) => count + item.quantity, 0);
+  }
+  
+  validateCart() {
+    return this.items.every(item => 
+      item.product && 
+      item.product.price > 0 && 
+      item.quantity > 0
+    );
+  }
+  
+  getSubtotal() {
+    return this.items.reduce((sum, item) => {
+      return sum + (item.product.price * item.quantity);
+    }, 0);
+  }
+  
+  getDiscountAmount() {
+    return this.getSubtotal() * this.discount;
+  }
+}
+
+// Example usage
+const cart = new ShoppingCart();
+cart.addItem({ id: 1, name: "Laptop", price: 999.99 }, 1);
+cart.addItem({ id: 2, name: "Mouse", price: 25.50 }, 2);
+cart.addItem({ id: 3, name: "Keyboard", price: 75.00 }, 1);
+cart.addItem({ id: 4, name: "Monitor", price: 299.99 }, 1);
+cart.applyDiscount(0.1);
+
+console.log("Total items:", cart.getItemCount());
+console.log("Subtotal:", cart.getSubtotal());
+console.log("Discount:", cart.getDiscountAmount());
+console.log("Total:", cart.getTotal());
+console.log("Is valid:", cart.validateCart());
+
+// Additional test code to ensure scroll
+function processOrder(cart) {
+  if (!cart.validateCart()) {
+    throw new Error("Invalid cart");
+  }
+  
+  const total = cart.getTotal();
+  console.log("Processing order for:", total);
+  
+  // Simulate payment processing
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ success: true, total });
+    }, 1000);
+  });
+}
+
+async function handleCheckout() {
+  try {
+    const result = await processOrder(cart);
+    console.log("Order processed:", result);
+  } catch (error) {
+    console.error("Order failed:", error);
+  }
+}`;
+
 export default function ComponentsPage() {
   const [code, setCode] = useState(initialCode);
+  const [longCodeState, setLongCodeState] = useState(longCode);
   const [toggle1, setToggle1] = useState(true);
   const [toggle2, setToggle2] = useState(false);
 
@@ -252,6 +373,65 @@ export default function ComponentsPage() {
                   showLineNumbers={true}
                   showHeader={true}
                 />
+              </div>
+            </div>
+          </section>
+
+          {/* Custom Scrollbar Demo Section */}
+          <section className="space-y-4 lg:space-y-6">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-bold text-devroast-green">
+                {"//"}
+              </span>
+              <H2>custom_scrollbar_demo</H2>
+            </div>
+
+            <div className="space-y-6">
+              <Text variant="bodySecondary" className="max-w-2xl">
+                This editor demonstrates the DevRoast custom scrollbar. The
+                scroll is automatically triggered when content exceeds the max
+                height (560px). The scrollbar is synchronized between the
+                textarea, syntax highlighting, and line numbers.
+                <br />
+                <br />
+                <strong>Debug info:</strong> The textarea should have classes
+                including "devroast-scrollbar" and "overflow-auto". Check
+                browser DevTools to inspect the element.
+              </Text>
+
+              {/* Long code example to trigger scrollbar */}
+              <div className="w-full lg:w-195">
+                <EditableCodeInput
+                  value={longCodeState}
+                  onChange={setLongCodeState}
+                  placeholder="// This example has enough code to trigger the custom scrollbar"
+                  height="adaptive" // This will show scroll when content exceeds max-h-140 (560px)
+                  responsive={true}
+                  showLineNumbers={true}
+                  showHeader={true}
+                />
+              </div>
+
+              <div className="bg-devroast-surface border border-devroast-border p-4 font-mono text-xs">
+                <div className="text-devroast-green mb-2">
+                  {"// Scrollbar Features:"}
+                </div>
+                <div className="space-y-1 text-devroast-text-secondary">
+                  <div>
+                    {
+                      "• Custom DevRoast theme colors (dark surface, green accent)"
+                    }
+                  </div>
+                  <div>
+                    {
+                      "• Synchronized scroll between textarea and syntax highlighting"
+                    }
+                  </div>
+                  <div>{"• Line numbers scroll in sync with content"}</div>
+                  <div>{"• 8px width with rounded corners"}</div>
+                  <div>{"• Hover effects for better UX"}</div>
+                  <div>{"• Cross-browser support (Webkit + Firefox)"}</div>
+                </div>
               </div>
             </div>
           </section>

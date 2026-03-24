@@ -12,12 +12,14 @@ const cardVariants = tv({
     header: [
       "flex",
       "flex-col",
-      "space-y-3", // 12px gap as per design
+      "space-y-2", // Smaller gap on mobile
+      "sm:space-y-3", // 12px gap as per design on desktop
     ],
     title: [
       "font-mono",
       "font-normal", // normal weight as per design
-      "text-sm", // 13px
+      "text-xs", // Mobile: smaller text
+      "sm:text-sm", // Desktop: 13px
       "text-devroast-text-primary",
       "leading-none",
     ],
@@ -31,7 +33,15 @@ const cardVariants = tv({
     content: [
       "pt-0", // no top padding since header has spacing
     ],
-    footer: ["flex", "items-center", "pt-3"],
+    footer: [
+      "flex",
+      "flex-col",
+      "sm:flex-row",
+      "sm:items-center",
+      "pt-3",
+      "gap-2",
+      "sm:gap-0",
+    ],
   },
   variants: {
     variant: {
@@ -53,28 +63,37 @@ const cardVariants = tv({
         footer: "p-0",
       },
       sm: {
-        root: "p-3", // 12px
-        header: "p-3",
-        content: "p-3 pt-0",
-        footer: "p-3 pt-0",
+        root: "p-2 sm:p-3", // Responsive padding
+        header: "p-2 sm:p-3",
+        content: "p-2 sm:p-3 pt-0",
+        footer: "p-2 sm:p-3 pt-0",
       },
       md: {
-        root: "p-5", // 20px as per design
-        header: "p-5",
-        content: "p-5 pt-0",
-        footer: "p-5 pt-0",
+        root: "p-3 sm:p-5", // Mobile: 12px, Desktop: 20px as per design
+        header: "p-3 sm:p-5",
+        content: "p-3 sm:p-5 pt-0",
+        footer: "p-3 sm:p-5 pt-0",
       },
       lg: {
-        root: "p-6", // 24px
-        header: "p-6",
-        content: "p-6 pt-0",
-        footer: "p-6 pt-0",
+        root: "p-4 sm:p-6", // Mobile: 16px, Desktop: 24px
+        header: "p-4 sm:p-6",
+        content: "p-4 sm:p-6 pt-0",
+        footer: "p-4 sm:p-6 pt-0",
+      },
+    },
+    responsive: {
+      true: {
+        root: "w-full lg:w-120", // Full width mobile, fixed desktop
+      },
+      false: {
+        root: "", // Keep original width behavior
       },
     },
   },
   defaultVariants: {
     variant: "default",
     padding: "md",
+    responsive: false,
   },
 });
 
@@ -92,8 +111,8 @@ export interface CardContentProps
 export interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, padding, ...props }, ref) => {
-    const { root } = cardVariants({ variant, padding });
+  ({ className, variant, padding, responsive, ...props }, ref) => {
+    const { root } = cardVariants({ variant, padding, responsive });
     return <div ref={ref} className={root({ className })} {...props} />;
   },
 );

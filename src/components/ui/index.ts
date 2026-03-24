@@ -3,6 +3,7 @@ export * from "./button";
 export * from "./card";
 export * from "./code-block";
 export * from "./diff-line";
+export * from "./editable-code-input";
 export * from "./score-ring";
 export * from "./table-row";
 export * from "./toggle";

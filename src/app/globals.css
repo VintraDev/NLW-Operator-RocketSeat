@@ -73,6 +73,59 @@
 
   /* Custom padding for toggle component - 3px exact from Pencil */
   --spacing-0_75: 0.1875rem; /* 3px */
+
+  /* ======================================= */
+  /* RESPONSIVE SYSTEM - Mobile-First Design */
+  /* ======================================= */
+
+  /* DevRoast Responsive Breakpoints (Tailwind v4 + Custom) */
+  --breakpoint-xs: 20rem; /* 320px - Small mobile */
+  --breakpoint-sm: 40rem; /* 640px - Large mobile (Tailwind standard) */
+  --breakpoint-md: 48rem; /* 768px - Tablet */
+  --breakpoint-lg: 64rem; /* 1024px - Desktop */
+  --breakpoint-xl: 80rem; /* 1280px - Large desktop */
+  --breakpoint-2xl: 96rem; /* 1536px - Extra large */
+
+  /* Responsive Spacing Scale - Mobile-First */
+  --spacing-responsive-xs: 1rem; /* 16px - Mobile padding */
+  --spacing-responsive-sm: 1.5rem; /* 24px - Tablet padding */
+  --spacing-responsive-md: 2.5rem; /* 40px - Desktop padding (current px-10) */
+  --spacing-responsive-lg: 3rem; /* 48px - Large desktop */
+
+  /* Responsive Container Max-Widths */
+  --container-sm: 100%; /* Mobile: full width */
+  --container-md: 100%; /* Tablet: full width */
+  --container-lg: 64rem; /* Desktop: 1024px */
+  --container-xl: 72rem; /* Large: 1152px (current max-w-6xl) */
+
+  /* Responsive Typography Scale */
+  --text-xs-responsive: 0.75rem; /* 12px mobile */
+  --text-sm-responsive: 0.875rem; /* 14px mobile */
+  --text-base-responsive: 1rem; /* 16px mobile */
+  --text-lg-responsive: 1.125rem; /* 18px mobile → 20px desktop */
+  --text-xl-responsive: 1.25rem; /* 20px mobile → 24px desktop */
+  --text-2xl-responsive: 1.5rem; /* 24px mobile → 32px desktop */
+  --text-3xl-responsive: 1.875rem; /* 30px mobile → 48px desktop */
+  --text-4xl-responsive: 2.25rem; /* 36px mobile → 64px desktop */
+
+  /* Component-Specific Responsive Values */
+  --navbar-height: 3.5rem; /* 56px - Consistent across all screens */
+  --navbar-padding-mobile: 1rem; /* 16px - px-4 */
+  --navbar-padding-tablet: 1.5rem; /* 24px - px-6 */
+  --navbar-padding-desktop: 2.5rem; /* 40px - px-10 (current) */
+
+  /* CodeBlock Responsive Settings */
+  --codeblock-width-mobile: 100%; /* Full width on mobile */
+  --codeblock-width-tablet: 100%; /* Full width on tablet */
+  --codeblock-width-desktop: 48.75rem; /* 780px - Original w-195 */
+  --codeblock-padding-mobile: 1rem; /* 16px */
+  --codeblock-padding-desktop: 1rem; /* 16px - Keep original */
+
+  /* Leaderboard Responsive Settings */
+  --leaderboard-width-mobile: 100%; /* Full width - Cards layout */
+  --leaderboard-width-tablet: 100%; /* Full width - Simplified table */
+  --leaderboard-width-desktop: 60rem; /* 960px - Original w-240 */
+  --leaderboard-card-gap: 1rem; /* 16px - Gap between cards on mobile */
 }
 
 * {
@@ -133,3 +186,77 @@ samp {
 .syntax-highlighted .comment {
   color: var(--color-syn-comment);
 } /* TODO comments */
+
+/* ✅ Custom DevRoast Scrollbar - Estilizada para o tema do projeto */
+.devroast-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-devroast-border) var(--color-devroast-surface);
+}
+
+/* Webkit scrollbar para Chrome/Safari */
+.devroast-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.devroast-scrollbar::-webkit-scrollbar-track {
+  background: var(--color-devroast-surface);
+  border-radius: 4px;
+}
+
+.devroast-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-devroast-border);
+  border-radius: 4px;
+  border: 1px solid var(--color-devroast-surface);
+}
+
+.devroast-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-devroast-text-muted);
+}
+
+.devroast-scrollbar::-webkit-scrollbar-corner {
+  background: var(--color-devroast-surface);
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-devroast-border) var(--color-devroast-surface);
+}
+
+/* Webkit scrollbar para Chrome/Safari */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: var(--color-devroast-surface);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-devroast-border);
+  border-radius: 4px;
+  border: 1px solid var(--color-devroast-surface);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--color-devroast-text-muted);
+}
+
+.scrollbar-thin::-webkit-scrollbar-corner {
+  background: var(--color-devroast-surface);
+}
+
+/* ✅ Suporte a scrollbar-color para Firefox */
+.scrollbar-track-devroast-surface {
+  --scrollbar-track: var(--color-devroast-surface);
+}
+
+.scrollbar-thumb-devroast-border {
+  --scrollbar-thumb: var(--color-devroast-border);
+}
+
+.hover\:scrollbar-thumb-devroast-text-muted:hover {
+  --scrollbar-thumb-hover: var(--color-devroast-text-muted);
+}

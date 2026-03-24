@@ -7,75 +7,101 @@ const typographyVariants = tv({
       h1: [
         "font-mono",
         "font-bold",
-        "text-4xl",
+        "text-2xl", // Mobile: 24px
+        "sm:text-3xl", // Tablet: 30px
+        "lg:text-4xl", // Desktop: 36px
         "text-devroast-text-primary",
         "tracking-tight",
       ],
       h2: [
         "font-mono",
         "font-bold",
-        "text-3xl",
+        "text-xl", // Mobile: 20px
+        "sm:text-2xl", // Tablet: 24px
+        "lg:text-3xl", // Desktop: 30px
         "text-devroast-text-primary",
         "tracking-tight",
       ],
       h3: [
         "font-mono",
         "font-bold",
-        "text-2xl",
+        "text-lg", // Mobile: 18px
+        "sm:text-xl", // Tablet: 20px
+        "lg:text-2xl", // Desktop: 24px
         "text-devroast-text-primary",
         "tracking-tight",
       ],
       h4: [
         "font-mono",
         "font-medium",
-        "text-xl",
+        "text-base", // Mobile: 16px
+        "sm:text-lg", // Tablet: 18px
+        "lg:text-xl", // Desktop: 20px
         "text-devroast-text-primary",
         "tracking-tight",
       ],
       body: [
         "font-mono",
-        "text-base",
+        "text-sm", // Mobile: 14px
+        "sm:text-base", // Desktop: 16px
         "text-devroast-text-primary",
         "leading-relaxed",
       ],
       bodySecondary: [
         "font-mono",
-        "text-base",
+        "text-sm", // Mobile: 14px
+        "sm:text-base", // Desktop: 16px
         "text-devroast-text-secondary",
         "leading-relaxed",
       ],
       small: [
         "font-mono",
-        "text-sm",
+        "text-xs", // Mobile: 12px
+        "sm:text-sm", // Desktop: 14px
         "text-devroast-text-secondary",
         "leading-normal",
       ],
       muted: [
         "font-mono",
-        "text-sm",
+        "text-xs", // Mobile: 12px
+        "sm:text-sm", // Desktop: 14px
         "text-devroast-text-muted",
         "leading-normal",
       ],
       code: [
         "font-mono",
-        "text-sm",
+        "text-xs", // Mobile: 12px
+        "sm:text-sm", // Desktop: 14px
         "bg-devroast-surface",
         "border",
         "border-devroast-border",
-        "px-2",
-        "py-1",
+        "px-1.5", // Mobile: smaller padding
+        "sm:px-2", // Desktop: original padding
+        "py-0.5",
+        "sm:py-1",
         "text-devroast-code-orange",
+        "rounded",
       ],
       lead: [
         "font-mono",
-        "text-xl",
+        "text-lg", // Mobile: 18px
+        "sm:text-xl", // Desktop: 20px
         "text-devroast-text-secondary",
         "leading-relaxed",
       ],
     },
+    responsive: {
+      true: {
+        // Additional responsive utilities
+      },
+      false: {
+        // Keep original sizing
+      },
+    },
   },
   defaultVariants: {
     variant: "body",
+    responsive: true, // Enable responsive by default
   },
 });
 
