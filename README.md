@@ -1,87 +1,87 @@
 # 🔥 DevRoast
 
-> **Get your code brutally roasted by AI** - A code review application that provides honest feedback on your programming skills.
+> **Tenha seu código brutalmente criticado pela IA** - Uma aplicação de revisão de código que fornece feedback honesto sobre suas habilidades de programação.
 
-Built during **NLW Operator** by [Rocketseat](https://www.rocketseat.com.br) 🚀
+Construído durante o **NLW Operator** da [Rocketseat](https://www.rocketseat.com.br) 🚀
 
-## 🎯 What is DevRoast?
+## 🎯 O que é o DevRoast?
 
-DevRoast is a web application that analyzes your code and gives it a **shame score** from 1 to 10, along with brutally honest feedback about your coding practices. Think of it as a roast battle between you and an AI judge that doesn't hold back.
+O DevRoast é uma aplicação web que analisa seu código e atribui uma **pontuação de vergonha** de 1 a 10, junto com feedback brutalmente honesto sobre suas práticas de programação. Pense nisso como uma batalha de roast entre você e um juiz de IA que não poupa ninguém.
 
-### ✨ Features
+### ✨ Funcionalidades
 
-- **🤖 AI-Powered Code Analysis** - Advanced algorithms evaluate your code quality
-- **📊 Shame Scoring System** - Get rated on a scale of 1-10 (10 being excellent, 1 being... well...)
-- **🏆 Global Leaderboard** - See how your code stacks up against other developers worldwide
-- **💬 Roast Mode vs Honest Mode** - Choose between savage roasting or constructive feedback
-- **📱 Fully Responsive** - Works perfectly on desktop, tablet, and mobile devices
-- **⚡ Real-time Code Editing** - Interactive code editor with syntax highlighting
+- **🤖 Análise de Código por IA** - Algoritmos avançados avaliam a qualidade do seu código
+- **📊 Sistema de Pontuação** - Seja avaliado em uma escala de 1-10 (10 sendo excelente, 1 sendo... bem...)
+- **🏆 Ranking Global** - Veja como seu código se compara com outros desenvolvedores do mundo todo
+- **💬 Modo Roast vs Modo Honesto** - Escolha entre críticas selvagens ou feedback construtivo
+- **📱 Totalmente Responsivo** - Funciona perfeitamente em desktop, tablet e dispositivos móveis
+- **⚡ Editor de Código em Tempo Real** - Editor interativo com highlighting de sintaxe
 
-## 🎮 How It Works
+## 🎮 Como Funciona
 
-1. **Paste Your Code** - Drop any code snippet into the editor
-2. **Choose Your Poison** - Select between "Roast Mode" (savage) or "Brutally Honest" (constructive)
-3. **Get Roasted** - Receive your shame score and detailed feedback
-4. **Join the Leaderboard** - See where you rank among other developers
-5. **Improve & Try Again** - Learn from the feedback and submit better code
+1. **Cole Seu Código** - Insira qualquer trecho de código no editor
+2. **Escolha Seu Veneno** - Selecione entre "Modo Roast" (selvagem) ou "Brutalmente Honesto" (construtivo)
+3. **Seja Roasted** - Receba sua pontuação de vergonha e feedback detalhado
+4. **Entre no Ranking** - Veja onde você se posiciona entre outros desenvolvedores
+5. **Melhore e Tente Novamente** - Aprenda com o feedback e envie código melhor
 
-## 🏆 Leaderboard & Scoring
+## 🏆 Ranking & Pontuação
 
-The global shame leaderboard ranks the worst code submissions from developers around the world:
+O ranking global de vergonha classifica as piores submissões de código de desenvolvedores ao redor do mundo:
 
-- **🔴 Red Scores (1-3)**: Code that makes senior developers cry
-- **🟠 Orange Scores (4-6)**: Code that needs some serious refactoring
-- **🟢 Green Scores (7-10)**: Code that's actually pretty decent
+- **🔴 Pontuações Vermelhas (1-3)**: Código que faz desenvolvedores sênior chorarem
+- **🟠 Pontuações Laranja (4-6)**: Código que precisa de uma refatoração séria
+- **🟢 Pontuações Verdes (7-10)**: Código que está realmente decente
 
-## 🛠️ Built With
+## 🛠️ Construído Com
 
-- **[Next.js 15](https://nextjs.org/)** - React framework with App Router
-- **[Tailwind CSS v4](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
-- **Custom Design System** - Built specifically for the DevRoast terminal aesthetic
+- **[Next.js 15](https://nextjs.org/)** - Framework React com App Router
+- **[Tailwind CSS v4](https://tailwindcss.com/)** - Framework CSS utility-first
+- **[TypeScript](https://www.typescriptlang.org/)** - JavaScript com tipagem segura
+- **Sistema de Design Customizado** - Construído especificamente para a estética terminal do DevRoast
 
-## 🎨 Design Philosophy
+## 🎨 Filosofia de Design
 
-DevRoast embraces a **terminal/code aesthetic** with:
-- Monospace fonts (JetBrains Mono)
-- Dark theme with green accent colors
-- Sharp, pixelated UI elements
-- Syntax-highlighted code blocks
-- Mobile-first responsive design
+O DevRoast adota uma **estética de terminal/código** com:
+- Fontes monoespaçadas (JetBrains Mono)
+- Tema escuro com cores de destaque verdes
+- Elementos de UI afiados e pixelados
+- Blocos de código com syntax highlighting
+- Design responsivo mobile-first
 
-## 🚀 Getting Started
+## 🚀 Como Começar
 
 ```bash
-# Install dependencies
+# Instalar dependências
 npm install
 
-# Run the development server
+# Executar o servidor de desenvolvimento
 npm run dev
 
-# Open http://localhost:3000
+# Abrir http://localhost:3000
 ```
 
-## 🚀 About NLW Operator
+## 🚀 Sobre o NLW Operator
 
-This project was developed during **NLW (Next Level Week) Operator**, an intensive programming event by Rocketseat. NLW is a hands-on experience where developers build complete applications from scratch while learning modern technologies and best practices.
+Este projeto foi desenvolvido durante o **NLW (Next Level Week) Operator**, um evento intensivo de programação da Rocketseat. O NLW é uma experiência prática onde desenvolvedores constroem aplicações completas do zero enquanto aprendem tecnologias modernas e melhores práticas.
 
 ## 📱 Screenshots
 
-*Coming soon - the app is currently in development during the NLW event!*
+*Em breve - a aplicação está atualmente em desenvolvimento durante o evento NLW!*
 
 ## 🔗 Links
 
 - **Rocketseat**: [https://www.rocketseat.com.br](https://www.rocketseat.com.br)
-- **NLW Event**: Check out Rocketseat for upcoming NLW editions
+- **Evento NLW**: Confira a Rocketseat para próximas edições do NLW
 
-## 🤝 Contributing
+## 🤝 Contribuindo
 
-This project was built as part of the NLW Operator educational program. While it's primarily for learning purposes, feedback and suggestions are welcome!
+Este projeto foi construído como parte do programa educacional NLW Operator. Embora seja principalmente para fins de aprendizado, feedback e sugestões são bem-vindos!
 
-## 📄 License
+## 📄 Licença
 
-Built during NLW Operator by Rocketseat for educational purposes.
+Construído durante o NLW Operator da Rocketseat para fins educacionais.
 
 ---
 
-**Ready to get roasted?** 🔥 Paste your code and see how it scores!
+**Pronto para ser roasted?** 🔥 Cole seu código e veja como ele pontua!
