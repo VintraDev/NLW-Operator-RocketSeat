@@ -2,14 +2,18 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { EditableCodeInput } from "@/components/ui/editable-code-input";
+import { CodeEditor } from "@/components/ui/code-editor";
 import { ResponsiveLink } from "@/components/ui/responsive-link";
 import { LeaderboardRow, TableCell, TableRow } from "@/components/ui/table-row";
 import { Toggle } from "@/components/ui/toggle";
 import { H1, Text } from "@/components/ui/typography";
+import type { SupportedLanguage } from "@/lib/syntax-highlighting";
 
 export default function Home() {
   const [roastMode, setRoastMode] = useState(true);
+  const [detectedLanguage, setDetectedLanguage] =
+    useState<SupportedLanguage | null>(null);
+  const [detectionConfidence, setDetectionConfidence] = useState<number>(0);
   const [code, setCode] = useState(`function calculateTotal(items) {
   let total = 0;
   for (let i = 0; i < items.length; i++) {
@@ -30,6 +34,8 @@ export default function Home() {
   const handleRoastCode = () => {
     console.log("Roasting code:", code);
     console.log("Roast mode:", roastMode);
+    console.log("Detected language:", detectedLanguage);
+    console.log("Detection confidence:", detectionConfidence);
     // TODO: Implement actual roasting logic
   };
 
@@ -95,17 +101,25 @@ export default function Home() {
             </Text>
           </div>
 
-          {/* Code Editor - EditableCodeInput Integration */}
+          {/* Code Editor - CodeEditor with Auto Language Detection */}
           <div className="w-full max-w-full lg:w-195 px-2 sm:px-0">
-            <EditableCodeInput
+            <CodeEditor
               value={code}
               onChange={setCode}
               placeholder="// paste your code here for roasting..."
               height="adaptive"
-              language="typescript"
+              autoDetectLanguage={true}
+              showLanguageSelector={true}
               showLineNumbers={true}
               showHeader={true}
               responsive={true}
+              onLanguageChange={(language, confidence) => {
+                setDetectedLanguage(language);
+                setDetectionConfidence(confidence || 0);
+                console.log(
+                  `Language detected: ${language} (${Math.round((confidence || 0) * 100)}% confidence)`,
+                );
+              }}
             />
           </div>
 
@@ -122,6 +136,23 @@ export default function Home() {
               <span className="font-[IBM_Plex_Mono] text-xs sm:text-[13px] text-devroast-text-secondary">
                 {roastMode ? "roast mode" : "brutally honest"}
               </span>
+
+              {/* Language Detection Status */}
+              {detectedLanguage && (
+                <div className="flex items-center gap-2">
+                  <span className="font-[IBM_Plex_Mono] text-xs text-devroast-text-muted">
+                    detected:
+                  </span>
+                  <span className="font-mono text-xs text-devroast-green">
+                    {detectedLanguage}
+                  </span>
+                  {detectionConfidence > 0 && (
+                    <span className="font-mono text-xs text-devroast-text-muted">
+                      ({Math.round(detectionConfidence * 100)}%)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right Action */}
