@@ -6,97 +6,93 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
-## Goal
+# DevRoast - Agent Instructions
 
-The user is implementing a DevRoast application - a code review application built with Next.js that replicates a design from a Pencil (.pen) file. The current goal is to make the CodeBlock component pixel-perfect with the Pencil design, specifically focusing on exact spacing, colors, and syntax highlighting to match the original design specifications.
+## Project Overview
 
-## Instructions
+DevRoast is a code review application that provides AI-powered brutally honest feedback on code quality. Users submit code and receive shame scores (1-10) with detailed roasting commentary. Built during **NLW Operator** by Rocketseat.
 
-- **Always use MCP Pencil** to access design specifications from `/home/vinicius/Downloads/devroast.pen` for accurate implementation
-- **Follow Tailwind v4 best practices**: Use semantic classes instead of arbitrary values (e.g., `w-120` not `w-[480px]`)
-- **Maintain pixel-perfect fidelity** to the Pencil design specifications
-- **Use DevRoast color system**: Specific CSS variables defined in globals.css (e.g., `--color-devroast-green`, `--color-devroast-text-primary`)
-- **Typography**: Use `font-mono` (JetBrains Mono) for consistency with terminal/code theme
-- **Component patterns**: Use `tailwind-variants` with `forwardRef` and proper TypeScript interfaces
-- **Update documentation** in `AGENTS.md` and `CLAUDE.md` for future reference
+## Tech Stack
 
-## Latest Discoveries - COMPLETED ✅
+- **Framework**: Next.js 15+ (App Router)
+- **Styling**: Tailwind CSS v4 + CSS Variables
+- **UI**: Custom component library with `tailwind-variants`
+- **Typography**: JetBrains Mono (primary), IBM Plex Mono (secondary)
 
-- **Syntax highlighting color mapping from Pencil** (IMPLEMENTED):
-  - `$syn-keyword` = `#C678DD` (keywords like `function`, `var`, `for`, `if`, `return`)
-  - `$syn-function` = `#61AFEF` (function names like `calculateTotal`, `.log`)
-  - `$syn-variable` = `#E06C75` (variables like `items`, `total`, `i`)
-  - `$syn-number` = `#D19A66` (numbers like `0`, `100`, `0.9`)
-  - `$syn-string` = `#E5C07B` (strings like `"discount applied"`)
-  - `$syn-property` = `#98C379` (properties like `.length`, `.price`)
-  - `$syn-operator` = `#ABB2BF` (operators and punctuation)
-  - Comments = `#8B8B8B` (TODO comments)
+## Design System
 
-- **Exact spacing specifications from Pencil** (VERIFIED CORRECT):
-  - Window header: 40px height, 16px horizontal padding ✅
-  - Traffic lights: 12px circles, 8px gap between them ✅
-  - Line numbers: 48px width, 16px+12px padding, 8px gap vertically ✅
-  - Code column: 16px padding, 8px gap vertically ✅
-  - Container: 780px width, 360px height
+### Color System (DevRoast Theme)
+```css
+--color-devroast-bg: #0a0a0a           /* Main background */
+--color-devroast-text-primary: #fafafa /* Primary text */
+--color-devroast-green: #10b981        /* Primary accent */
+--color-devroast-orange: #f59e0b       /* Medium scores */
+--color-devroast-red: #ef4444          /* Bad scores */
+--color-devroast-border: #2a2a2a       /* Borders */
+--color-devroast-surface: #0f0f0f      /* Surface containers */
+```
 
-- **CodeBlockWithCopy** now includes custom JavaScript syntax highlighting that matches Pencil design exactly ✅
+### Score-based Auto-coloring
+```typescript
+// Scores 1-10 automatically determine color
+if (score <= 3) return "red";     // Bad code
+if (score <= 6) return "yellow";  // Medium code  
+return "green";                   // Good code
+```
 
-## Accomplished ✅
+## Component Patterns
 
-### ✅ **CodeBlock Component - PIXEL PERFECT:**
-- ✅ Added exact syntax highlighting colors from Pencil design to CSS variables
-- ✅ Implemented custom JavaScript syntax highlighter for `CodeBlockWithCopy`
-- ✅ Verified spacing matches Pencil specifications exactly
-- ✅ Uses DevRoast color system with proper CSS variables
-- ✅ Both server (`CodeBlock`) and client (`CodeBlockWithCopy`) versions working
-- ✅ Built and tested successfully
+### Standard API
+```typescript
+interface ComponentProps extends VariantProps<typeof variants> {
+  responsive?: boolean;  // Enable mobile-first responsive behavior
+  children?: React.ReactNode;
+}
 
-### ✅ **Homepage Implementation Complete:**
-- Created pixel-perfect first section following Pencil design
-- Successfully integrated CodeBlockWithCopy component to replace manual code editor
-- Implemented all sections: navbar, hero title, code editor, actions bar, footer stats
-- Added functional Toggle component for "roast mode"
-- Used proper DevRoast color system and typography
+const Component = forwardRef<HTMLElement, ComponentProps>(({ className, responsive, ...props }, ref) => {
+  return <element className={variants({ className, responsive })} {...props} />;
+});
+Component.displayName = "Component";
+```
 
-### ✅ **Component Library:**
-- All UI components working: Button, Badge, Card, Typography, Toggle, CodeBlock, DiffLine, TableRow, ScoreRing
-- Fixed Toggle component state management issues
-- Migrated from arbitrary pixel values to semantic Tailwind classes
-- Updated documentation with best practices
+### Responsive Design
+- **Mobile-first**: `px-4 sm:px-6 lg:px-10`
+- **Breakpoints**: sm (640px), md (768px), lg (1024px)
+- **Typography**: `text-sm sm:text-base lg:text-lg`
 
-## Status: COMPLETE ✅
+## Key Components
 
-The CodeBlock component is now pixel-perfect with the Pencil design and includes exact syntax highlighting colors. The homepage implementation is complete and functional.
+### LeaderboardRow
+- Auto-colored scores based on quality (1-10)
+- Desktop: Table format | Mobile: Card layout
+- `responsive={true}` enables adaptive behavior
 
-## Relevant files / directories
+### CodeBlock Components  
+- **CodeBlock**: Server-side syntax highlighting
+- **CodeBlockWithCopy**: Client-side with copy functionality
+- **EditableCodeInput**: Interactive editor with live highlighting
 
-### **CodeBlock Implementation:**
-- `src/components/ui/code-block.tsx` - CodeBlock component with custom syntax highlighting
-- `src/app/globals.css` - DevRoast color system including syntax highlighting variables
-- `/home/vinicius/Downloads/devroast.pen` - Original Pencil design file (access via MCP)
+## Development Rules
 
-### **Homepage Implementation:**
-- `src/app/page.tsx` - Homepage using CodeBlockWithCopy component
-- `src/app/globals.css` - DevRoast color system and design tokens
+### Styling
+- Use semantic classes: `bg-devroast-green` not `bg-[#10b981]`
+- Mobile-first responsive design
+- Sharp corners (radius 0) for primary buttons
+- Monospace fonts for code/UI elements
 
-### **UI Components:**
-- `src/components/ui/` - All UI components directory
-- `src/components/ui/toggle.tsx` - Fixed toggle component
-- `src/components/ui/button.tsx` - Button with DevRoast styling
-- `src/components/ui/typography.tsx` - Text components
+### File Structure
+```
+src/
+├── app/                # Next.js App Router pages
+├── components/ui/      # Component library
+└── app/globals.css     # Tailwind + CSS variables
+```
 
-### **Documentation:**
-- `src/components/ui/AGENTS.md` - Component patterns and Tailwind v4 best practices
-- `CLAUDE.md` - Project overview with changelog of homepage implementation
-
-### **Test Pages:**
-- `src/app/components/page.tsx` - Component library demonstration
-- `src/app/test-toggle/page.tsx` - Toggle testing page
-
-### **Configuration:**
-- `package.json`, `tsconfig.json`, `next.config.ts` - Project setup
-- Build system working correctly with all components
-
-**Status**: All tasks completed successfully. The CodeBlock component now matches the Pencil design exactly with proper syntax highlighting and spacing.
+### Design Reference
+- Original: `/home/vinicius/Downloads/devroast.pen`
+- Use MCP Pencil tools for design specifications
+- Maintain pixel-perfect fidelity
 
 ---
+
+**Status**: All major components implemented and pixel-perfect with design.

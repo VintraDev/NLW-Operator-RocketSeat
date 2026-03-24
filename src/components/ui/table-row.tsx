@@ -1,5 +1,7 @@
 import * as React from "react";
 import { tv, type VariantProps } from "tailwind-variants";
+import { Badge } from "./badge";
+import { Card } from "./card";
 
 const tableRowVariants = tv({
   base: "flex items-center w-full px-5 py-4 border-b border-devroast-border",
@@ -25,6 +27,87 @@ const tableCellVariants = tv({
   },
   defaultVariants: {
     align: "left",
+  },
+});
+
+// Mobile Card variant for Leaderboard
+const leaderboardCardVariants = tv({
+  slots: {
+    container: [
+      "p-4",
+      "border",
+      "border-devroast-border",
+      "bg-transparent",
+      "rounded-md",
+      "space-y-3",
+    ],
+    header: ["flex", "items-center", "justify-between"],
+    rankBadge: [
+      "inline-flex",
+      "items-center",
+      "gap-1",
+      "px-2",
+      "py-1",
+      "rounded",
+      "font-mono",
+      "text-xs",
+      "font-bold",
+    ],
+    score: ["font-mono", "text-lg", "font-bold"],
+    codeBlock: [
+      "font-mono",
+      "text-xs",
+      "text-devroast-text-primary",
+      "bg-devroast-surface",
+      "p-3",
+      "rounded",
+      "border",
+      "border-devroast-border",
+      "overflow-x-auto",
+    ],
+    footer: [
+      "flex",
+      "items-center",
+      "justify-between",
+      "text-xs",
+      "text-devroast-text-muted",
+    ],
+    languageTag: ["font-mono", "text-xs", "text-devroast-text-secondary"],
+    actionLink: [
+      "font-mono",
+      "text-xs",
+      "text-devroast-green",
+      "hover:text-devroast-green",
+      "cursor-pointer",
+    ],
+  },
+  variants: {
+    rank: {
+      first: {
+        rankBadge: "bg-amber-500 text-black",
+      },
+      normal: {
+        rankBadge: "bg-devroast-surface text-devroast-text-secondary",
+      },
+    },
+    scoreColor: {
+      red: {
+        score: "text-devroast-red",
+      },
+      yellow: {
+        score: "text-devroast-orange",
+      },
+      green: {
+        score: "text-devroast-green",
+      },
+      default: {
+        score: "text-devroast-text-primary",
+      },
+    },
+  },
+  defaultVariants: {
+    rank: "normal",
+    scoreColor: "default",
   },
 });
 
@@ -81,12 +164,34 @@ TableCell.displayName = "TableCell";
 export interface LeaderboardRowProps extends Omit<TableRowProps, "children"> {
   rank: string | number;
   score: string | number;
+  scoreColor?: "red" | "yellow" | "green" | "default"; // If not provided, will auto-calculate from score
+  code: string;
+  language: string;
+  responsive?: boolean; // NEW: Enable responsive behavior
+}
+
+// Function to determine score color based on value (1-10 scale)
+const getScoreColorFromValue = (
+  score: string | number,
+): "red" | "yellow" | "green" => {
+  const numScore = typeof score === "string" ? parseFloat(score) : score;
+
+  if (numScore <= 3) return "red"; // 1.0 - 3.0: Bad code (red)
+  if (numScore <= 6) return "yellow"; // 3.1 - 6.0: Medium code (yellow/orange)
+  return "green"; // 6.1 - 10.0: Good code (green)
+};
+
+// Mobile Card Component for Leaderboard
+export interface LeaderboardCardProps
+  extends React.HTMLAttributes<HTMLDivElement> {
+  rank: string | number;
+  score: string | number;
   scoreColor?: "red" | "yellow" | "green" | "default";
   code: string;
   language: string;
 }
 
-const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
+const LeaderboardCard = React.forwardRef<HTMLDivElement, LeaderboardCardProps>(
   (
     {
       rank,
@@ -99,8 +204,66 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
     },
     ref,
   ) => {
+    // Auto-determine color if not explicitly set
+    const actualScoreColor =
+      scoreColor === "default" ? getScoreColorFromValue(score) : scoreColor;
+
+    const {
+      container,
+      header,
+      rankBadge,
+      score: scoreClass,
+      codeBlock,
+      footer,
+      languageTag,
+      actionLink,
+    } = leaderboardCardVariants({
+      rank: rank === 1 ? "first" : "normal",
+      scoreColor: actualScoreColor,
+    });
+
+    return (
+      <div ref={ref} className={container({ className })} {...props}>
+        {/* Header: Rank + Score */}
+        <div className={header()}>
+          <div className={rankBadge()}>#{rank}</div>
+          <div className={scoreClass()}>{score}</div>
+        </div>
+
+        {/* Code Block */}
+        <div className={codeBlock()}>{code}</div>
+
+        {/* Footer: Language + Action */}
+        <div className={footer()}>
+          <span className={languageTag()}>{language}</span>
+          <span className={actionLink()}>View Details →</span>
+        </div>
+      </div>
+    );
+  },
+);
+LeaderboardCard.displayName = "LeaderboardCard";
+
+const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
+  (
+    {
+      rank,
+      score,
+      scoreColor = "default",
+      code,
+      language,
+      responsive = false,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
+    // Auto-determine color if not explicitly set
+    const actualScoreColor =
+      scoreColor === "default" ? getScoreColorFromValue(score) : scoreColor;
+
     const getScoreColor = () => {
-      switch (scoreColor) {
+      switch (actualScoreColor) {
         case "red":
           return "text-devroast-red";
         case "yellow":
@@ -112,15 +275,68 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
       }
     };
 
+    // If responsive mode is enabled, render as card on mobile, table on desktop
+    if (responsive) {
+      return (
+        <>
+          {/* Mobile Card Layout */}
+          <div className="block md:hidden">
+            <LeaderboardCard
+              ref={ref}
+              rank={rank}
+              score={score}
+              scoreColor={actualScoreColor}
+              code={code}
+              language={language}
+              className={className}
+              {...props}
+            />
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block">
+            <TableRow ref={ref} className={className} {...props}>
+              <TableCell width={50} align="left">
+                <span className="text-devroast-text-muted font-mono text-[13px]">
+                  #{rank}
+                </span>
+              </TableCell>
+
+              <TableCell width={70} align="left">
+                <span
+                  className={`font-mono text-[13px] font-bold ${getScoreColor()}`}
+                >
+                  {score}
+                </span>
+              </TableCell>
+
+              <TableCell width="auto" align="left" className="flex-1 mr-6">
+                <span className="text-devroast-text-secondary font-mono text-[12px] truncate">
+                  {code}
+                </span>
+              </TableCell>
+
+              <TableCell width={100} align="left">
+                <span className="text-devroast-text-muted font-mono text-[12px]">
+                  {language}
+                </span>
+              </TableCell>
+            </TableRow>
+          </div>
+        </>
+      );
+    }
+
+    // Default: Always render as table row
     return (
       <TableRow ref={ref} className={className} {...props}>
-        <TableCell width={40} align="left">
+        <TableCell width={50} align="left">
           <span className="text-devroast-text-muted font-mono text-[13px]">
             #{rank}
           </span>
         </TableCell>
 
-        <TableCell width={60} align="left">
+        <TableCell width={70} align="left">
           <span
             className={`font-mono text-[13px] font-bold ${getScoreColor()}`}
           >
@@ -149,6 +365,8 @@ export {
   TableRow,
   TableCell,
   LeaderboardRow,
+  LeaderboardCard,
   tableRowVariants,
   tableCellVariants,
+  leaderboardCardVariants,
 };

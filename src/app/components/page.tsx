@@ -11,12 +11,14 @@ import {
 } from "@/components/ui/card";
 import { CodeBlockWithCopy } from "@/components/ui/code-block";
 import { DiffLine } from "@/components/ui/diff-line";
+import { EditableCodeInput } from "@/components/ui/editable-code-input";
+import { ResponsiveLink } from "@/components/ui/responsive-link";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { LeaderboardRow, TableCell, TableRow } from "@/components/ui/table-row";
 import { Toggle } from "@/components/ui/toggle";
 import { Code, H1, H2, H3, Text } from "@/components/ui/typography";
 
-const code = `function calculateTotal(items) {
+const initialCode = `function calculateTotal(items) {
   var total = 0;
   for (let i = 0; i < items.length; i++) {
     total += items[i].price * items[i].quantity;
@@ -25,25 +27,30 @@ const code = `function calculateTotal(items) {
   if (total > 100) {
     total = total * 0.9; // apply 10% discount
     console.log("Discount applied");
-  }`
+  }
+  
+  return total;
+}`;
 
 export default function ComponentsPage() {
+  const [code, setCode] = useState(initialCode);
   const [toggle1, setToggle1] = useState(true);
   const [toggle2, setToggle2] = useState(false);
+
   return (
     <div className="min-h-screen bg-devroast-bg text-white">
-      <main className="mx-auto max-w-6xl px-20 py-15">
-        <header className="mb-15">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-20 py-8 lg:py-15">
+        <header className="mb-8 lg:mb-15">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-2xl font-bold text-devroast-green">
+            <span className="font-mono text-lg sm:text-2xl font-bold text-devroast-green">
               {"//"}
             </span>
             <H1>component_library</H1>
           </div>
         </header>
 
-        <div className="space-y-15">
-          <section className="space-y-6">
+        <div className="space-y-8 lg:space-y-15">
+          <section className="space-y-4 lg:space-y-6">
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm font-bold text-devroast-green">
                 {"//"}
@@ -51,7 +58,7 @@ export default function ComponentsPage() {
               <H2>typography</H2>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-3 lg:space-y-5">
               <H1>paste your code. get roasted.</H1>
 
               <div className="flex items-center gap-2">
@@ -69,7 +76,7 @@ export default function ComponentsPage() {
             </div>
           </section>
 
-          <section className="space-y-6">
+          <section className="space-y-4 lg:space-y-6">
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm font-bold text-devroast-green">
                 {"//"}
@@ -77,10 +84,21 @@ export default function ComponentsPage() {
               <H2>buttons</H2>
             </div>
 
-            <div className="flex items-center gap-4">
-              <Button variant="primary">$ roast_my_code</Button>
-              <Button variant="secondary">$ share_roast</Button>
-              <Button variant="ghost">$ view_all &gt;&gt;</Button>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <Button variant="primary" responsive={true}>
+                $ roast_my_code
+              </Button>
+              <Button variant="secondary" responsive={true}>
+                $ share_roast
+              </Button>
+              <ResponsiveLink
+                href="/leaderboard"
+                variant="button"
+                buttonStyle="ghost"
+                responsive={true}
+              >
+                $ view_all &gt;&gt;
+              </ResponsiveLink>
             </div>
           </section>
 
@@ -128,7 +146,7 @@ export default function ComponentsPage() {
             </div>
           </section>
 
-          <section className="space-y-6">
+          <section className="space-y-4 lg:space-y-6">
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm font-bold text-devroast-green">
                 {"//"}
@@ -136,9 +154,7 @@ export default function ComponentsPage() {
               <H2>cards</H2>
             </div>
 
-            <Card className="w-120">
-              {" "}
-              {/* 480px = 30rem */}
+            <Card responsive={true}>
               <CardHeader>
                 <Badge variant="critical">critical</Badge>
                 <CardTitle>using var instead of const/let</CardTitle>
@@ -150,6 +166,24 @@ export default function ComponentsPage() {
                 </CardDescription>
               </CardHeader>
             </Card>
+          </section>
+
+          <section className="space-y-4 lg:space-y-6">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-bold text-devroast-green">
+                {"//"}
+              </span>
+              <H2>code_block</H2>
+            </div>
+
+            <div className="space-y-6">
+              {/* CodeBlockWithCopy with filename - Responsive */}
+              <div className="w-full lg:w-195">
+                <CodeBlockWithCopy filename="server.js" size="md">
+                  {code}
+                </CodeBlockWithCopy>
+              </div>
+            </div>
           </section>
 
           <section className="space-y-6">
@@ -166,13 +200,64 @@ export default function ComponentsPage() {
                 filename="server.js"
                 className="w-195" // 780px = 48.75rem
                 size="md"
-              >{code}
-                </CodeBlockWithCopy>
+              >
+                {code}
+              </CodeBlockWithCopy>
+            </div>
+          </section>
+
+          {/* Editable Code Block Section */}
+          <section className="space-y-4 lg:space-y-6">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-bold text-devroast-green">
+                {"//"}
+              </span>
+              <H2>editable_code_block</H2>
+            </div>
+
+            <div className="space-y-6">
+              {/* EditableCodeInput - Interactive with TypeScript highlighting */}
+              <div className="w-full lg:w-195">
+                <EditableCodeInput
+                  value={code}
+                  onChange={setCode}
+                  placeholder="// paste your code here to edit..."
+                  height="adaptive"
+                  responsive={true}
+                  showLineNumbers={true}
+                  showHeader={true}
+                />
+              </div>
+
+              {/* Small editable code input example */}
+              <div className="w-full sm:w-120">
+                <EditableCodeInput
+                  value="console.log('hello world');"
+                  onChange={() => {}} // Read-only for demo
+                  height="auto"
+                  responsive={true}
+                  showLineNumbers={false}
+                  showHeader={false}
+                />
+              </div>
+
+              {/* Additional EditableCodeInput example with fixed height */}
+              <div className="w-full lg:w-195">
+                <EditableCodeInput
+                  value={code}
+                  onChange={setCode}
+                  placeholder="// Fixed height like Pencil design (360px)"
+                  height="fixed"
+                  responsive={true}
+                  showLineNumbers={true}
+                  showHeader={true}
+                />
+              </div>
             </div>
           </section>
 
           {/* Diff Lines Section */}
-          <section className="space-y-6">
+          <section className="space-y-4 lg:space-y-6">
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm font-bold text-devroast-green">
                 {"//"}
@@ -180,9 +265,7 @@ export default function ComponentsPage() {
               <H2>diff_line</H2>
             </div>
 
-            <div className="w-140 space-y-0 border border-devroast-border">
-              {" "}
-              {/* 560px = 35rem */}
+            <div className="w-full lg:w-140 space-y-0 border border-devroast-border">
               <DiffLine type="removed" code="var total = 0;" />
               <DiffLine type="added" code="const total = 0;" />
               <DiffLine
@@ -193,7 +276,7 @@ export default function ComponentsPage() {
           </section>
 
           {/* Table Row Section */}
-          <section className="space-y-6">
+          <section className="space-y-4 lg:space-y-6">
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm font-bold text-devroast-green">
                 {"//"}
@@ -201,18 +284,71 @@ export default function ComponentsPage() {
               <H2>table_row</H2>
             </div>
 
-            <div className="w-full">
-              <LeaderboardRow
-                rank={1}
-                score={2.1}
-                scoreColor="red"
-                code="function calculateTotal(items) { var total = 0; ...}"
-                language="javascript"
-              />
+            <div className="w-full space-y-3">
+              {/* Score-based Auto-coloring Examples */}
+              <div className="border border-devroast-border">
+                {/* Header */}
+                <TableRow
+                  variant="static"
+                  className="bg-devroast-surface h-10 border-b border-devroast-border"
+                >
+                  <TableCell
+                    width={50}
+                    className="text-devroast-text-muted font-mono text-xs font-bold px-5"
+                  >
+                    RANK
+                  </TableCell>
+                  <TableCell
+                    width={70}
+                    className="text-devroast-text-muted font-mono text-xs font-bold"
+                  >
+                    SCORE
+                  </TableCell>
+                  <TableCell className="text-devroast-text-muted font-mono text-xs font-bold flex-1">
+                    CODE
+                  </TableCell>
+                  <TableCell
+                    width={100}
+                    className="text-devroast-text-muted font-mono text-xs font-bold"
+                  >
+                    LANG
+                  </TableCell>
+                </TableRow>
+
+                {/* Examples with different score ranges */}
+                <LeaderboardRow
+                  rank={1}
+                  score={1.2} // Red: Bad code (≤3)
+                  code='eval(prompt("enter code")) // trust the user lol'
+                  language="javascript"
+                  responsive={false}
+                />
+                <LeaderboardRow
+                  rank={2}
+                  score={4.5} // Yellow/Orange: Medium code (3.1-6)
+                  code="if (x == true) { return true; } else { return false; }"
+                  language="typescript"
+                  responsive={false}
+                />
+                <LeaderboardRow
+                  rank={3}
+                  score={8.2} // Green: Good code (6.1-10)
+                  code="const users = await db.users.findMany({ where: { isActive: true } });"
+                  language="sql"
+                  responsive={false}
+                />
+              </div>
+
+              <Text
+                variant="small"
+                className="text-devroast-text-muted font-[IBM_Plex_Mono]"
+              >
+                {`// Auto-colored based on score: Red (1-3), Orange (3.1-6), Green (6.1-10)`}
+              </Text>
             </div>
           </section>
 
-          <section className="space-y-6">
+          <section className="space-y-4 lg:space-y-6">
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm font-bold text-devroast-green">
                 {"//"}
@@ -220,22 +356,22 @@ export default function ComponentsPage() {
               <H2>navbar</H2>
             </div>
 
-            <div className="flex h-14 items-center justify-between border-b border-devroast-border bg-devroast-bg px-6">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-lg font-bold text-devroast-green">
+            <div className="flex h-12 sm:h-14 items-center justify-between border-b border-devroast-border bg-devroast-bg px-4 sm:px-6">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-mono text-base sm:text-lg font-bold text-devroast-green">
                   &gt;
                 </span>
-                <span className="font-mono text-base font-medium text-devroast-text-primary">
+                <span className="font-mono text-sm sm:text-base font-medium text-devroast-text-primary">
                   devroast
                 </span>
               </div>
-              <span className="font-mono text-xs text-devroast-text-secondary">
+              <span className="hidden sm:inline font-mono text-xs text-devroast-text-secondary">
                 leaderboard
               </span>
             </div>
           </section>
 
-          <section className="space-y-6">
+          <section className="space-y-4 lg:space-y-6">
             <div className="flex items-center gap-2">
               <span className="font-mono text-sm font-bold text-devroast-green">
                 {"//"}
@@ -243,7 +379,9 @@ export default function ComponentsPage() {
               <H2>score_ring</H2>
             </div>
 
-            <ScoreRing score={3.5} maxScore={10} size="lg" />
+            <div className="flex justify-center sm:justify-start">
+              <ScoreRing score={3.5} maxScore={10} size="lg" />
+            </div>
           </section>
         </div>
       </main>
