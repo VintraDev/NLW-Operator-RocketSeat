@@ -88,6 +88,16 @@ src/
 └── app/globals.css     # Tailwind + CSS variables
 ```
 
+### API/Backend (tRPC)
+- Use `tRPC v11` + `@trpc/tanstack-react-query` as the default API layer.
+- Keep DB access in `src/db/queries.ts`; UI should consume tRPC procedures, not SQL/Drizzle directly.
+- Expose HTTP handler in `src/app/api/trpc/[trpc]/route.ts` via fetch adapter.
+- Keep server/client boundaries explicit (`server-only` for server modules, `"use client"` for client modules).
+- QueryClient rules:
+  - Server: request-scoped (`cache(makeQueryClient)`), never shared across requests.
+  - Client: browser singleton QueryClient.
+- For homepage metrics specifically, do not use Suspense/skeleton fallback. Start numbers at `0` and animate to API value using NumberFlow.
+
 ### Design Reference
 - Original: `/home/vinicius/Downloads/devroast.pen`
 - Use MCP Pencil tools for design specifications

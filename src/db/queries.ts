@@ -515,3 +515,54 @@ export async function getHomepageMetrics() {
         : Number.parseFloat(row?.avg_score ?? "0"),
   };
 }
+
+/**
+ * Get homepage leaderboard (top 3 worst snippets + footer stats)
+ */
+export async function getHomepageLeaderboard() {
+  const entriesResult = await db.execute(sql`
+    SELECT
+      ROW_NUMBER() OVER (ORDER BY l.shame_score ASC, l.created_at ASC)::int AS rank,
+      l.shame_score::int AS score,
+      COALESCE(NULLIF(l.code_preview, ''), LEFT(s.original_code, 120), '// no snippet available') AS code,
+      COALESCE(NULLIF(s.original_code, ''), l.code_preview, '// no code available') AS full_code,
+      l.language
+    FROM leaderboard_entries l
+    LEFT JOIN code_submissions s ON s.id = l.submission_id
+    ORDER BY l.shame_score ASC, l.created_at ASC
+    LIMIT 3
+  `);
+
+  const statsResult = await db.execute(sql`
+    SELECT
+      (SELECT COUNT(*)::int FROM code_submissions) AS total_codes,
+      (SELECT COUNT(*) FILTER (WHERE status = 'completed')::int FROM code_submissions) AS total_roasts
+  `);
+
+  const entries = entriesResult.rows as Array<{
+    rank: number;
+    score: number;
+    code: string;
+    full_code: string;
+    language: string;
+  }>;
+
+  const statsRow = statsResult.rows[0] as {
+    total_codes: number;
+    total_roasts: number;
+  };
+
+  return {
+    entries: entries.map((entry) => ({
+      rank: entry.rank,
+      score: entry.score,
+      code: entry.code,
+      fullCode: entry.full_code,
+      language: entry.language,
+    })),
+    stats: {
+      totalCodes: statsRow?.total_codes ?? 0,
+      totalRoasts: statsRow?.total_roasts ?? 0,
+    },
+  };
+}

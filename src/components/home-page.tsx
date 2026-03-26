@@ -1,21 +1,20 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CodeEditor } from "@/components/ui/code-editor";
 import Header from "@/components/ui/header";
-import { LeaderboardRow, TableCell, TableRow } from "@/components/ui/table-row";
 import { Toggle } from "@/components/ui/toggle";
 import { H1, Text } from "@/components/ui/typography";
 import type { SupportedLanguage } from "@/lib/syntax-highlighting";
 
 type HomePageProps = {
   metrics: React.ReactNode;
+  leaderboard: React.ReactNode;
 };
 
-export function HomePage({ metrics }: HomePageProps) {
+export function HomePage({ metrics, leaderboard }: HomePageProps) {
   const router = useRouter();
   const [roastMode, setRoastMode] = useState(true);
   const [detectedLanguage, setDetectedLanguage] =
@@ -44,27 +43,6 @@ function calculateTotal(items) {
   const handleRoastCode = () => {
     router.push("/results/123e4567-e89b-12d3-a456-426614174000");
   };
-
-  const leaderboardData = [
-    {
-      rank: 1,
-      score: 1.2,
-      code: 'eval(prompt("enter code")) document.write(response) // trust the user lol',
-      language: "javascript",
-    },
-    {
-      rank: 2,
-      score: 4.5,
-      code: "if (x == true) { return true; } else if (x == false) { return false; } else { return !false; }",
-      language: "typescript",
-    },
-    {
-      rank: 3,
-      score: 8.2,
-      code: "const users = await db.users.findMany({ where: { isActive: true } });",
-      language: "sql",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-devroast-bg text-white">
@@ -157,87 +135,7 @@ function calculateTotal(items) {
 
         <div className="h-15" />
 
-        <div className="flex flex-col items-center gap-6 lg:gap-8 w-full">
-          <div className="w-full max-w-full xl:w-240 flex flex-col gap-6 px-4 lg:px-0">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-sm font-bold text-devroast-green">
-                  {"//"}
-                </span>
-                <span className="font-mono text-sm font-bold text-devroast-text-primary">
-                  shame_leaderboard
-                </span>
-              </div>
-              <div className="flex items-center">
-                <Link
-                  href="/leaderboard"
-                  className="font-mono text-xs text-devroast-text-secondary px-3 py-1.5 border border-devroast-border hover:bg-devroast-surface hover:text-devroast-text-primary transition-colors duration-200 cursor-pointer"
-                >
-                  $ view_all &gt;&gt;
-                </Link>
-              </div>
-            </div>
-
-            <div className="-mt-2">
-              <span className="font-[IBM_Plex_Mono] text-[13px] text-devroast-text-muted">
-                {`// the worst code on the internet, ranked by shame`}
-              </span>
-            </div>
-
-            <div className="border border-devroast-border">
-              <div className="hidden md:flex">
-                <TableRow
-                  variant="static"
-                  className="bg-devroast-surface h-10 border-b border-devroast-border"
-                >
-                  <TableCell
-                    width={50}
-                    className="text-devroast-text-muted font-mono text-xs font-bold px-5"
-                  >
-                    RANK
-                  </TableCell>
-                  <TableCell
-                    width={70}
-                    className="text-devroast-text-muted font-mono text-xs font-bold"
-                  >
-                    SCORE
-                  </TableCell>
-                  <TableCell className="text-devroast-text-muted font-mono text-xs font-bold flex-1">
-                    CODE
-                  </TableCell>
-                  <TableCell
-                    width={100}
-                    className="text-devroast-text-muted font-mono text-xs font-bold"
-                  >
-                    LANG
-                  </TableCell>
-                </TableRow>
-              </div>
-
-              <div className="space-y-3 md:space-y-0">
-                {leaderboardData.map((item) => (
-                  <LeaderboardRow
-                    key={item.rank}
-                    responsive={true}
-                    rank={item.rank}
-                    score={item.score}
-                    code={item.code}
-                    language={item.language}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-center py-4">
-              <Link
-                href="/leaderboard"
-                className="font-[IBM_Plex_Mono] text-xs text-devroast-text-muted hover:text-devroast-text-secondary transition-colors duration-200 cursor-pointer"
-              >
-                showing top 3 of 2,847 - view full leaderboard &gt;&gt;
-              </Link>
-            </div>
-          </div>
-        </div>
+        {leaderboard}
       </main>
     </div>
   );
