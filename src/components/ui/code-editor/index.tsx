@@ -97,6 +97,21 @@ const codeEditorVariants = tv({
       "caret-white", // Cursor branco visível
       "z-10",
     ],
+    characterCounter: [
+      "absolute",
+      "bottom-2",
+      "right-3",
+      "font-mono",
+      "text-xs",
+      "text-devroast-text-muted",
+      "pointer-events-none",
+      "z-20", // Above textarea
+      "bg-devroast-surface",
+      "px-2",
+      "py-1",
+      "border",
+      "border-devroast-border",
+    ],
     loadingIndicator: [
       "absolute",
       "top-2",
@@ -212,6 +227,21 @@ export interface CodeEditorProps
    * Callback when language is detected or changed
    */
   onLanguageChange?: (language: SupportedLanguage, confidence?: number) => void;
+
+  /**
+   * Maximum character length
+   */
+  maxLength?: number;
+
+  /**
+   * Show character counter
+   */
+  showCharacterCount?: boolean;
+
+  /**
+   * Callback when character limit is exceeded
+   */
+  onLimitExceeded?: (exceeded: boolean) => void;
 }
 
 /**
@@ -231,6 +261,9 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
       showLineNumbers = true,
       showHeader = true,
       enableSyntaxHighlighting = true,
+      maxLength = 2000,
+      showCharacterCount = true,
+      onLimitExceeded,
       onLanguageChange,
       height,
       responsive,
@@ -249,6 +282,7 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
       codeArea,
       syntaxBackground,
       textareaOverlay,
+      characterCounter,
       loadingIndicator,
     } = codeEditorVariants({ height, responsive });
 
@@ -257,6 +291,8 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
       useState<SupportedLanguage | null>(null);
     const [detectionConfidence, setDetectionConfidence] = useState<number>(0);
     const [highlightedCode, setHighlightedCode] = useState("");
+    const [isManuallySet, setIsManuallySet] = useState(false); // Track if user manually selected language
+    const [lastCodeLength, setLastCodeLength] = useState(value.length); // Track code changes
 
     // Refs
     const syntaxRef = useRef<HTMLDivElement>(null);
@@ -270,7 +306,7 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
     });
 
     const { detect, isDetecting } = useLanguageDetection({
-      minConfidence: 0.5,
+      minConfidence: 0.6, // Higher confidence threshold
       enableHeuristicFallback: true,
       debounceMs: 500,
     });
@@ -279,6 +315,10 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
     const currentLanguage = useMemo(() => {
       return language || detectedLanguage || "javascript";
     }, [language, detectedLanguage]);
+
+    // Character count and limit tracking
+    const characterCount = value.length;
+    const isOverLimit = characterCount > maxLength;
 
     // Combine refs
     const combinedRef = useCallback(
@@ -293,12 +333,27 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
       [ref],
     );
 
-    // Auto-detect language on code change
+    // Auto-detect language on code change - only if not manually set and code actually changed
     useEffect(() => {
-      if (autoDetectLanguage && !language && value.trim().length > 10) {
+      const currentCodeLength = value.length;
+      const codeChanged = Math.abs(currentCodeLength - lastCodeLength) > 5; // Significant change threshold
+
+      // Only auto-detect if:
+      // 1. Auto-detection is enabled
+      // 2. No manual language override from prop
+      // 3. User hasn't manually selected a language
+      // 4. Code has changed significantly
+      // 5. Code is long enough to analyze
+      if (
+        autoDetectLanguage &&
+        !language &&
+        !isManuallySet &&
+        codeChanged &&
+        value.trim().length > 10
+      ) {
         detect(value)
           .then((result) => {
-            if (result.language && result.confidence > 0.3) {
+            if (result.language && result.confidence > 0.5) {
               setDetectedLanguage(result.language);
               setDetectionConfidence(result.confidence);
 
@@ -313,9 +368,35 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
             setDetectionConfidence(0.3);
           });
       }
-    }, [value, autoDetectLanguage, language, detect, onLanguageChange]);
 
-    // Update syntax highlighting
+      // Update last code length
+      setLastCodeLength(currentCodeLength);
+    }, [
+      value,
+      autoDetectLanguage,
+      language,
+      detect,
+      onLanguageChange,
+      isManuallySet,
+      lastCodeLength,
+    ]);
+
+    // Reset manual selection when code is cleared or becomes very short
+    useEffect(() => {
+      if (value.trim().length < 10) {
+        setIsManuallySet(false);
+        setDetectedLanguage(null);
+        setDetectionConfidence(0);
+      }
+    }, [value]);
+
+    // Notify parent when limit is exceeded
+    useEffect(() => {
+      if (onLimitExceeded) {
+        onLimitExceeded(isOverLimit);
+      }
+    }, [isOverLimit, onLimitExceeded]);
+
     useEffect(() => {
       if (enableSyntaxHighlighting && value) {
         highlightCode(value, currentLanguage)
@@ -342,6 +423,7 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
       (newLanguage: SupportedLanguage) => {
         setDetectedLanguage(newLanguage);
         setDetectionConfidence(1.0); // Manual selection = 100% confidence
+        setIsManuallySet(true); // Mark as manually set to prevent auto-detection
 
         if (onLanguageChange) {
           onLanguageChange(newLanguage, 1.0);
@@ -350,36 +432,60 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
       [onLanguageChange],
     );
 
-    // Handle paste for auto-detection
+    // Handle paste for auto-detection - only if not manually set
     const handlePaste = useCallback(
       (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-        if (autoDetectLanguage && !language) {
-          setTimeout(() => {
-            const newValue = e.currentTarget.value;
-            if (newValue.trim().length > 10) {
-              detect(newValue)
-                .then((result) => {
-                  if (result.language) {
-                    setDetectedLanguage(result.language);
-                    setDetectionConfidence(result.confidence);
-
-                    if (onLanguageChange) {
-                      onLanguageChange(result.language, result.confidence);
-                    }
-                  }
-                })
-                .catch(() => {
-                  // Ignore paste detection errors
-                });
-            }
-          }, 100);
-        }
-
+        // Call original paste handler first
         if (props.onPaste) {
           props.onPaste(e);
         }
+
+        // Only proceed with auto-detection if conditions are met
+        if (!autoDetectLanguage || language || isManuallySet) {
+          return;
+        }
+
+        try {
+          // Use the clipboard data directly for immediate detection
+          const pastedData = e.clipboardData?.getData("text") || "";
+          if (pastedData.trim().length > 10) {
+            // Combine current value with pasted data for detection
+            const newValue = value + pastedData;
+
+            detect(newValue)
+              .then((result) => {
+                if (result.language) {
+                  setDetectedLanguage(result.language);
+                  setDetectionConfidence(result.confidence);
+
+                  if (onLanguageChange) {
+                    onLanguageChange(result.language, result.confidence);
+                  }
+                }
+              })
+              .catch((error) => {
+                // Log error in development but don't crash
+                if (process.env.NODE_ENV === "development") {
+                  console.warn("Language detection failed on paste:", error);
+                }
+              });
+          }
+        } catch (error) {
+          // Prevent paste detection errors from breaking the paste functionality
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Error in paste detection handler:", error);
+          }
+        }
       },
-      [autoDetectLanguage, language, detect, onLanguageChange, props.onPaste],
+      [
+        autoDetectLanguage,
+        language,
+        detect,
+        onLanguageChange,
+        isManuallySet,
+        value,
+        props.onPaste,
+      ],
     );
 
     // Sync scroll between textarea and other elements
@@ -450,6 +556,7 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
                   value={currentLanguage}
                   onValueChange={handleLanguageChange}
                   confidence={detectionConfidence}
+                  isManual={isManuallySet}
                   className="w-32"
                 />
               </div>
@@ -498,6 +605,20 @@ const CodeEditor = forwardRef<HTMLTextAreaElement, CodeEditorProps>(
               autoCapitalize="off"
               {...props}
             />
+
+            {/* Character Counter */}
+            {showCharacterCount && (
+              <div
+                className={characterCounter()}
+                style={{
+                  color: isOverLimit
+                    ? "var(--color-devroast-red)"
+                    : "var(--color-devroast-text-muted)",
+                }}
+              >
+                {characterCount.toLocaleString()}/{maxLength.toLocaleString()}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -54,7 +54,7 @@ export function useLanguageDetection(
   options: UseLanguageDetectionOptions = {},
 ): UseLanguageDetectionReturn {
   const {
-    minConfidence = 0.5,
+    minConfidence = 0.6, // Increased default minimum confidence
     enableHeuristicFallback = true,
     debounceMs = 500,
   } = options;

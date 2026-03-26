@@ -1,20 +1,26 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CodeEditor } from "@/components/ui/code-editor";
-import { ResponsiveLink } from "@/components/ui/responsive-link";
+import Header from "@/components/ui/header";
 import { LeaderboardRow, TableCell, TableRow } from "@/components/ui/table-row";
 import { Toggle } from "@/components/ui/toggle";
 import { H1, Text } from "@/components/ui/typography";
 import type { SupportedLanguage } from "@/lib/syntax-highlighting";
 
 export default function Home() {
+  const router = useRouter();
   const [roastMode, setRoastMode] = useState(true);
   const [detectedLanguage, setDetectedLanguage] =
     useState<SupportedLanguage | null>(null);
   const [detectionConfidence, setDetectionConfidence] = useState<number>(0);
-  const [code, setCode] = useState(`function calculateTotal(items) {
+  const [isCodeOverLimit, setIsCodeOverLimit] = useState(false);
+  const [code, setCode] = useState(`// example code to roast
+
+function calculateTotal(items) {
   let total = 0;
   for (let i = 0; i < items.length; i++) {
     total += items[i];
@@ -32,11 +38,7 @@ export default function Home() {
 }`);
 
   const handleRoastCode = () => {
-    console.log("Roasting code:", code);
-    console.log("Roast mode:", roastMode);
-    console.log("Detected language:", detectedLanguage);
-    console.log("Detection confidence:", detectionConfidence);
-    // TODO: Implement actual roasting logic
+    router.push("/results/123e4567-e89b-12d3-a456-426614174000");
   };
 
   // Leaderboard data - Auto-colored based on score (1-10 scale)
@@ -63,22 +65,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-devroast-bg text-white">
-      {/* Navbar - Mobile-First Responsive */}
-      <nav className="flex h-14 items-center justify-between border-b border-devroast-border bg-devroast-bg px-4 sm:px-6 lg:px-10">
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <span className="font-mono text-lg sm:text-xl font-bold text-devroast-green">
-            &gt;
-          </span>
-          <span className="font-mono text-sm sm:text-lg font-medium text-devroast-text-primary">
-            devroast
-          </span>
-        </div>
-        <div className="hidden sm:flex items-center">
-          <span className="font-mono text-xs sm:text-[13px] text-devroast-text-secondary">
-            leaderboard
-          </span>
-        </div>
-      </nav>
+      <Header />
 
       {/* Main Content - Mobile-First Responsive Layout */}
       <main className="flex flex-col items-center px-4 sm:px-6 lg:px-10 pt-12 lg:pt-20">
@@ -113,6 +100,9 @@ export default function Home() {
               showLineNumbers={true}
               showHeader={true}
               responsive={true}
+              maxLength={2000}
+              showCharacterCount={true}
+              onLimitExceeded={setIsCodeOverLimit}
               onLanguageChange={(language, confidence) => {
                 setDetectedLanguage(language);
                 setDetectionConfidence(confidence || 0);
@@ -162,6 +152,7 @@ export default function Home() {
                 responsive={true}
                 onClick={handleRoastCode}
                 className="w-full sm:w-auto"
+                disabled={isCodeOverLimit}
               >
                 $ roast_my_code
               </Button>
@@ -199,9 +190,12 @@ export default function Home() {
                 </span>
               </div>
               <div className="flex items-center">
-                <span className="font-mono text-xs text-devroast-text-secondary px-3 py-1.5 border border-devroast-border">
+                <Link
+                  href="/leaderboard"
+                  className="font-mono text-xs text-devroast-text-secondary px-3 py-1.5 border border-devroast-border hover:bg-devroast-surface hover:text-devroast-text-primary transition-colors duration-200 cursor-pointer"
+                >
                   $ view_all &gt;&gt;
-                </span>
+                </Link>
               </div>
             </div>
 
@@ -261,9 +255,12 @@ export default function Home() {
 
             {/* Footer Hint - Matching Pencil Design */}
             <div className="flex justify-center py-4">
-              <span className="font-[IBM_Plex_Mono] text-xs text-devroast-text-muted">
+              <Link
+                href="/leaderboard"
+                className="font-[IBM_Plex_Mono] text-xs text-devroast-text-muted hover:text-devroast-text-secondary transition-colors duration-200 cursor-pointer"
+              >
                 showing top 3 of 2,847 · view full leaderboard &gt;&gt;
-              </span>
+              </Link>
             </div>
           </div>
         </div>

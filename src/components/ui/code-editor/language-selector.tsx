@@ -37,6 +37,11 @@ interface LanguageSelectorProps {
   className?: string;
 
   /**
+   * Whether the language was manually selected by user
+   */
+  isManual?: boolean;
+
+  /**
    * Responsive behavior for mobile
    */
   responsive?: boolean;
@@ -62,6 +67,7 @@ export function LanguageSelector({
   confidence,
   disabled = false,
   className,
+  isManual = false,
   responsive = true,
 }: LanguageSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -148,11 +154,12 @@ export function LanguageSelector({
       >
         <span className="flex items-center gap-2">
           <span className="truncate">{selectedDisplayName}</span>
-          {confidence && confidence > 0 && (
+          {confidence && confidence > 0 && !isManual && (
             <span className="text-devroast-text-secondary text-xs">
               ({Math.round(confidence * 100)}%)
             </span>
           )}
+          {isManual && <span className="text-devroast-green text-xs">✓</span>}
         </span>
         <ChevronDownIcon
           className={cn(

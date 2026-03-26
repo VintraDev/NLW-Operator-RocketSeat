@@ -45,8 +45,8 @@ const hljsToSupportedLanguage: Record<string, SupportedLanguage> = {
   css: "css",
   html: "html",
   json: "json",
-  jsx: "jsx",
-  tsx: "tsx",
+  jsx: "javascript", // Map JSX to JavaScript for highlighting
+  tsx: "typescript", // Map TSX to TypeScript for highlighting
   bash: "bash",
   shell: "bash",
   sql: "sql",
@@ -64,6 +64,9 @@ const hljsToSupportedLanguage: Record<string, SupportedLanguage> = {
   yml: "yaml",
   rb: "ruby",
   cs: "csharp",
+  // Fix common mis-detections
+  "c-like": "javascript", // Sometimes highlight.js returns this for JS
+  coffeescript: "javascript", // Often confused with JS
 };
 
 /**
@@ -124,7 +127,8 @@ export async function detectLanguage(
     // Try highlight.js first
     try {
       const hljsResult = await detectWithHighlightJS(code);
-      if (hljsResult && hljsResult.confidence > 0.3) {
+      if (hljsResult && hljsResult.confidence > 0.4) {
+        // Increased confidence threshold
         console.log(
           `Language detected by highlight.js: ${hljsResult.language} (${Math.round(hljsResult.confidence * 100)}%)`,
         );
@@ -143,7 +147,7 @@ export async function detectLanguage(
       console.log(`Language detected by heuristic: ${heuristicResult}`);
       return {
         language: heuristicResult,
-        confidence: 0.7, // Moderate confidence for heuristic detection
+        confidence: 0.8, // Higher confidence for improved heuristic detection
       };
     }
 
@@ -167,6 +171,29 @@ export function detectLanguageHeuristic(
     return null;
   }
 
+  // Debug logging (can be removed in production)
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      "Heuristic detection for code:",
+      trimmed.substring(0, 50) + "...",
+    );
+  }
+
+  // Helper function to check if content looks like CSS
+  function isCssLike(content: string): boolean {
+    return (
+      /@media\s/.test(content) ||
+      /@import\s/.test(content) ||
+      /@keyframes\s/.test(content) ||
+      /\.([\w-]+)\s*\{/.test(content) ||
+      /#[\w-]+\s*\{/.test(content) ||
+      // CSS properties that are rarely used as JS object keys
+      /\b(display|position|margin|padding|background|color|font-size|width|height|border|opacity|transform)\s*:/.test(
+        content,
+      )
+    );
+  }
+
   // JSON detection (must be first to avoid false positives)
   if (
     (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
@@ -174,28 +201,27 @@ export function detectLanguageHeuristic(
   ) {
     try {
       JSON.parse(trimmed);
+      console.log("Detected as JSON");
       return "json";
     } catch {
       // Not valid JSON, continue checking
+      console.log("Not valid JSON, continuing...");
     }
   }
 
-  // HTML detection
+  // HTML detection (early to catch HTML files with CSS/JS)
   if (
     trimmed.startsWith("<!DOCTYPE") ||
     trimmed.includes("<html>") ||
-    /<\w+[^>]*>/g.test(trimmed)
+    trimmed.includes("</html>") ||
+    (trimmed.includes("<") &&
+      trimmed.includes(">") &&
+      /<[a-zA-Z][^>]*>/.test(trimmed) &&
+      // Ensure it's not just comparison operators
+      /<\/[a-zA-Z][^>]*>/.test(trimmed))
   ) {
+    console.log("Detected as HTML");
     return "html";
-  }
-
-  // CSS detection
-  if (
-    trimmed.includes("{") &&
-    trimmed.includes("}") &&
-    /[\w-]+\s*:\s*[^;]+;/.test(trimmed)
-  ) {
-    return "css";
   }
 
   // TypeScript detection (must come before JavaScript)
@@ -203,26 +229,76 @@ export function detectLanguageHeuristic(
     trimmed.includes("interface ") ||
     trimmed.includes(": string") ||
     trimmed.includes(": number") ||
+    trimmed.includes(": boolean") ||
     trimmed.includes("type ") ||
     /<[A-Z]\w*>/.test(trimmed) ||
     trimmed.includes("extends ") ||
-    trimmed.includes("implements ")
+    trimmed.includes("implements ") ||
+    /:\s*(string|number|boolean|void|any|unknown)\b/.test(trimmed) ||
+    trimmed.includes("as ") ||
+    trimmed.includes("enum ")
   ) {
+    console.log("Detected as TypeScript");
     return "typescript";
   }
 
-  // JavaScript detection
+  // JavaScript detection (more comprehensive patterns)
   if (
     trimmed.includes("function ") ||
+    /function\s*\w*\s*\(/.test(trimmed) || // function declarations
     trimmed.includes("=>") ||
     trimmed.includes("const ") ||
     trimmed.includes("let ") ||
     trimmed.includes("var ") ||
     trimmed.includes("console.log") ||
+    trimmed.includes("console.") ||
     trimmed.includes("require(") ||
-    trimmed.includes("import ")
+    trimmed.includes("import ") ||
+    trimmed.includes("export ") ||
+    /\b(document|window|alert|setTimeout|setInterval)\b/.test(trimmed) ||
+    // For loops and control structures
+    /for\s*\(\s*(let|var|const|)\s*\w+/.test(trimmed) ||
+    /if\s*\(.*\)\s*\{/.test(trimmed) ||
+    // Object/array patterns common in JS but ensure it's not CSS
+    (/\{[\s\S]*:[\s\S]*\}/.test(trimmed) && !isCssLike(trimmed)) ||
+    /\[[\s\S]*\]/.test(trimmed) ||
+    // Method calls
+    /\w+\(\)/.test(trimmed) ||
+    /\w+\([^)]*\)/.test(trimmed) ||
+    // Common JS patterns
+    /\${/.test(trimmed) || // Template literals
+    /\.then\(/.test(trimmed) || // Promises
+    /async\s+/.test(trimmed) || // Async functions
+    /await\s+/.test(trimmed) || // Await calls
+    // Variable assignments
+    /\w+\s*=\s*/.test(trimmed) ||
+    // Common JS keywords
+    /\b(return|break|continue|switch|case|default|try|catch|finally|throw|new|this|typeof|instanceof)\b/.test(
+      trimmed,
+    )
   ) {
+    console.log("Detected as JavaScript");
     return "javascript";
+  }
+
+  // CSS detection (after JS/TS to avoid conflicts)
+  if (
+    trimmed.includes("{") &&
+    trimmed.includes("}") &&
+    // More specific CSS pattern to avoid JS object confusion
+    (/^[^{}]*\{[^{}]*[a-zA-Z-]+\s*:\s*[^;{}]+;[^{}]*\}/.test(trimmed) ||
+      /@media\s/.test(trimmed) ||
+      /@import\s/.test(trimmed) ||
+      /@keyframes\s/.test(trimmed) ||
+      /\.([\w-]+)\s*\{/.test(trimmed) ||
+      /#[\w-]+\s*\{/.test(trimmed) ||
+      // CSS properties that are rarely used as JS object keys
+      /\b(display|position|margin|padding|background|color|font-size|width|height)\s*:/.test(
+        trimmed,
+      ))
+  ) {
+    console.log("Detected as CSS");
+    return "css";
   }
 
   // Python detection
@@ -234,6 +310,7 @@ export function detectLanguageHeuristic(
     /^\s*#/.test(trimmed) ||
     trimmed.includes("if __name__")
   ) {
+    console.log("Detected as Python");
     return "python";
   }
 
@@ -244,6 +321,7 @@ export function detectLanguageHeuristic(
     trimmed.includes("public static void main") ||
     trimmed.includes("System.out.println")
   ) {
+    console.log("Detected as Java");
     return "java";
   }
 
@@ -254,6 +332,7 @@ export function detectLanguageHeuristic(
     trimmed.includes('import "') ||
     trimmed.includes("fmt.Println")
   ) {
+    console.log("Detected as Go");
     return "go";
   }
 
@@ -264,6 +343,7 @@ export function detectLanguageHeuristic(
     trimmed.includes("println!") ||
     trimmed.includes("use std::")
   ) {
+    console.log("Detected as Rust");
     return "rust";
   }
 
@@ -274,11 +354,13 @@ export function detectLanguageHeuristic(
     trimmed.includes("public class ") ||
     trimmed.includes("Console.WriteLine")
   ) {
+    console.log("Detected as C#");
     return "csharp";
   }
 
   // PHP detection
   if (trimmed.startsWith("<?php") || trimmed.includes("$")) {
+    console.log("Detected as PHP");
     return "php";
   }
 
@@ -290,11 +372,13 @@ export function detectLanguageHeuristic(
     trimmed.includes("class ") ||
     trimmed.includes("end")
   ) {
+    console.log("Detected as Ruby");
     return "ruby";
   }
 
   // SQL detection
   if (/\b(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\b/i.test(trimmed)) {
+    console.log("Detected as SQL");
     return "sql";
   }
 
@@ -304,6 +388,7 @@ export function detectLanguageHeuristic(
     /^\s*\w+:\s*/.test(trimmed) ||
     /^\s*-\s+/.test(trimmed)
   ) {
+    console.log("Detected as YAML");
     return "yaml";
   }
 
@@ -312,6 +397,7 @@ export function detectLanguageHeuristic(
     trimmed.startsWith("<?xml") ||
     (trimmed.includes("<") && trimmed.includes("/>"))
   ) {
+    console.log("Detected as XML");
     return "xml";
   }
 
@@ -322,9 +408,11 @@ export function detectLanguageHeuristic(
     trimmed.includes("echo ") ||
     /\$\{?\w+\}?/.test(trimmed)
   ) {
+    console.log("Detected as Bash");
     return "bash";
   }
 
+  console.log("No language detected by heuristic");
   // Default fallback
   return null;
 }

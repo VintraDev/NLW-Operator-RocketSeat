@@ -30,7 +30,7 @@ const editableCodeInputVariants = tv({
     trafficDot: ["w-3", "h-3", "rounded-full"],
     contentWrapper: [
       "flex",
-      "relative", // Para posicionamento do textarea overlay
+      "relative", // Para posicionamento do textarea overlay e character counter
     ],
     lineNumbers: [
       "w-10", // 40px como no Pencil
@@ -86,6 +86,21 @@ const editableCodeInputVariants = tv({
       "text-transparent", // Texto invisível, mostra syntax background
       "caret-white", // Cursor branco visível
       "z-10", // Above syntax background
+    ],
+    characterCounter: [
+      "absolute",
+      "bottom-2",
+      "right-3",
+      "font-mono",
+      "text-xs",
+      "text-devroast-text-muted",
+      "pointer-events-none",
+      "z-20", // Above textarea
+      "bg-devroast-surface",
+      "px-2",
+      "py-1",
+      "border",
+      "border-devroast-border",
     ],
   },
   variants: {
@@ -165,6 +180,9 @@ export interface EditableCodeInputProps
   language?: "typescript" | "javascript";
   showLineNumbers?: boolean;
   showHeader?: boolean;
+  maxLength?: number;
+  showCharacterCount?: boolean;
+  onLimitExceeded?: (exceeded: boolean) => void;
 }
 
 // TypeScript/JavaScript syntax highlighter otimizado
@@ -358,6 +376,9 @@ const EditableCodeInput = forwardRef<
       language = "typescript",
       showLineNumbers = true,
       showHeader = true,
+      maxLength = 5000,
+      showCharacterCount = true,
+      onLimitExceeded,
       height,
       responsive,
       ...props
@@ -374,12 +395,16 @@ const EditableCodeInput = forwardRef<
       codeArea,
       syntaxBackground,
       textareaOverlay,
+      characterCounter,
     } = editableCodeInputVariants({ height, responsive });
 
     const [highlightedCode, setHighlightedCode] = useState("");
     const syntaxRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const lineNumbersRef = useRef<HTMLDivElement>(null);
+
+    const characterCount = value.length;
+    const isOverLimit = characterCount > maxLength;
 
     // Combine refs
     const combinedRef = useCallback(
@@ -399,6 +424,13 @@ const EditableCodeInput = forwardRef<
       const highlighted = highlightTypescriptSyntax(value);
       setHighlightedCode(highlighted);
     }, [value]);
+
+    // Notify parent when limit is exceeded
+    useEffect(() => {
+      if (onLimitExceeded) {
+        onLimitExceeded(isOverLimit);
+      }
+    }, [isOverLimit, onLimitExceeded]);
 
     // Sync scroll between textarea and other elements
     const handleScroll = useCallback(() => {
@@ -496,6 +528,20 @@ const EditableCodeInput = forwardRef<
               autoCapitalize="off"
               {...props}
             />
+
+            {/* Character Counter */}
+            {showCharacterCount && (
+              <div
+                className={characterCounter()}
+                style={{
+                  color: isOverLimit
+                    ? "var(--color-devroast-red)"
+                    : "var(--color-devroast-text-muted)",
+                }}
+              >
+                {characterCount.toLocaleString()}/{maxLength.toLocaleString()}
+              </div>
+            )}
           </div>
         </div>
       </div>

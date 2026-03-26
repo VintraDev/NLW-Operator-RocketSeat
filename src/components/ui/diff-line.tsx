@@ -2,12 +2,12 @@ import * as React from "react";
 import { tv, type VariantProps } from "tailwind-variants";
 
 const diffLineVariants = tv({
-  base: "flex items-start gap-2 font-mono text-[13px] font-normal px-4 py-2 w-full",
+  base: "flex items-center h-7 font-mono text-xs font-normal px-4 w-full",
   variants: {
     type: {
-      added: "bg-green-950/30 text-devroast-text-primary",
-      removed: "bg-red-950/30 text-devroast-text-primary",
-      context: "bg-transparent text-devroast-text-secondary",
+      added: "bg-[#10B98115] text-[#10B981]",
+      removed: "bg-[#EF444415] text-[#EF4444]",
+      context: "bg-transparent text-devroast-text-primary",
     },
   },
   defaultVariants: {
@@ -44,7 +44,7 @@ const DiffLine = React.forwardRef<HTMLDivElement, DiffLineProps>(
           return "text-devroast-red";
         case "context":
         default:
-          return "text-devroast-text-muted";
+          return "text-devroast-text-tertiary";
       }
     };
 
@@ -54,7 +54,7 @@ const DiffLine = React.forwardRef<HTMLDivElement, DiffLineProps>(
         className={diffLineVariants({ className, type })}
         {...props}
       >
-        <span className={`select-none min-w-[1ch] ${getPrefixColor()}`}>
+        <span className={`select-none w-5 shrink-0 ${getPrefixColor()}`}>
           {getPrefix()}
         </span>
         <span className="flex-1">{code}</span>
