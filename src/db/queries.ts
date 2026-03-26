@@ -3,7 +3,7 @@
  * Following the spec: NO Drizzle relations - use raw SQL queries with joins instead
  */
 
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { db } from "./config";
 import {
   analysisSessions,
@@ -489,4 +489,29 @@ export async function getTableStats() {
   `);
 
   return result.rows;
+}
+
+/**
+ * Get homepage aggregated metrics
+ */
+export async function getHomepageMetrics() {
+  const result = await db.execute(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE status = 'completed')::int AS total_roasted_codes,
+      COALESCE(ROUND(AVG(shame_score) FILTER (WHERE status = 'completed'), 1), 0)::numeric AS avg_score
+    FROM code_submissions
+  `);
+
+  const row = result.rows[0] as {
+    total_roasted_codes: number;
+    avg_score: string | number;
+  };
+
+  return {
+    totalRoastedCodes: row?.total_roasted_codes ?? 0,
+    avgScore:
+      typeof row?.avg_score === "number"
+        ? row.avg_score
+        : Number.parseFloat(row?.avg_score ?? "0"),
+  };
 }
