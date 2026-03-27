@@ -566,3 +566,58 @@ export async function getHomepageLeaderboard() {
     },
   };
 }
+
+/**
+ * Get full leaderboard (top N snippets + aggregate stats)
+ */
+export async function getFullLeaderboard(limit = 20) {
+  const entriesResult = await db.execute(sql`
+    SELECT
+      ROW_NUMBER() OVER (ORDER BY l.shame_score ASC, l.created_at ASC)::int AS rank,
+      l.shame_score::int AS score,
+      COALESCE(NULLIF(l.code_preview, ''), LEFT(s.original_code, 120), '// no snippet available') AS code,
+      COALESCE(NULLIF(s.original_code, ''), NULLIF(l.code_preview, ''), '// no code available') AS full_code,
+      l.language
+    FROM leaderboard_entries l
+    LEFT JOIN code_submissions s ON s.id = l.submission_id
+    ORDER BY l.shame_score ASC, l.created_at ASC
+    LIMIT ${limit}
+  `);
+
+  const statsResult = await db.execute(sql`
+    SELECT
+      COUNT(*)::int AS total_codes,
+      COALESCE(ROUND(AVG(shame_score) FILTER (WHERE status = 'completed'), 1), 0)::numeric AS avg_score
+    FROM code_submissions
+  `);
+
+  const entries = entriesResult.rows as Array<{
+    rank: number;
+    score: number;
+    code: string;
+    full_code: string;
+    language: string;
+  }>;
+
+  const statsRow = statsResult.rows[0] as {
+    total_codes: number;
+    avg_score: string | number;
+  };
+
+  return {
+    entries: entries.map((entry) => ({
+      rank: entry.rank,
+      score: entry.score,
+      code: entry.code,
+      fullCode: entry.full_code,
+      language: entry.language,
+    })),
+    stats: {
+      totalCodes: statsRow?.total_codes ?? 0,
+      avgScore:
+        typeof statsRow?.avg_score === "number"
+          ? statsRow.avg_score
+          : Number.parseFloat(statsRow?.avg_score ?? "0"),
+    },
+  };
+}
