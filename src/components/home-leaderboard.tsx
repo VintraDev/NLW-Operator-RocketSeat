@@ -1,7 +1,6 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { LeaderboardRow, TableCell, TableRow } from "@/components/ui/table-row";
@@ -90,32 +89,11 @@ export function HomeLeaderboard() {
                     responsive={true}
                     rank={item.rank}
                     score={item.score}
-                    code={item.code}
+                    code={isExpanded ? item.fullCode : item.code}
                     language={item.language}
+                    expandCode={isExpanded}
+                    onToggleExpand={() => toggleRow(item.rank)}
                   />
-
-                  <div className="px-4 md:px-5 py-3 bg-devroast-bg border-t border-devroast-border">
-                    <button
-                      type="button"
-                      onClick={() => toggleRow(item.rank)}
-                      className="inline-flex items-center gap-2 font-mono text-xs text-devroast-green hover:text-devroast-text-primary transition-colors cursor-pointer"
-                    >
-                      {isExpanded ? "show less" : "show more"}
-                      {isExpanded ? (
-                        <ChevronUp size={14} />
-                      ) : (
-                        <ChevronDown size={14} />
-                      )}
-                    </button>
-
-                    {isExpanded && (
-                      <div className="mt-3 border border-devroast-border bg-devroast-surface p-3 max-h-52 overflow-auto">
-                        <pre className="font-mono text-xs leading-5 text-devroast-text-secondary whitespace-pre-wrap break-words m-0">
-                          {item.fullCode}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
                 </div>
               );
             })}

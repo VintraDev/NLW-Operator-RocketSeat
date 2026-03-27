@@ -1,7 +1,6 @@
+import { ChevronDown, ChevronUp } from "lucide-react";
 import * as React from "react";
 import { tv, type VariantProps } from "tailwind-variants";
-import { Badge } from "./badge";
-import { Card } from "./card";
 
 const tableRowVariants = tv({
   base: "flex items-center w-full px-5 py-4 border-b border-devroast-border",
@@ -168,6 +167,8 @@ export interface LeaderboardRowProps extends Omit<TableRowProps, "children"> {
   code: string;
   language: string;
   responsive?: boolean; // NEW: Enable responsive behavior
+  expandCode?: boolean;
+  onToggleExpand?: () => void;
 }
 
 // Function to determine score color based on value (1-10 scale)
@@ -189,6 +190,8 @@ export interface LeaderboardCardProps
   scoreColor?: "red" | "yellow" | "green" | "default";
   code: string;
   language: string;
+  expandCode?: boolean;
+  onToggleExpand?: () => void;
 }
 
 const LeaderboardCard = React.forwardRef<HTMLDivElement, LeaderboardCardProps>(
@@ -199,6 +202,8 @@ const LeaderboardCard = React.forwardRef<HTMLDivElement, LeaderboardCardProps>(
       scoreColor = "default",
       code,
       language,
+      expandCode = false,
+      onToggleExpand,
       className,
       ...props
     },
@@ -231,7 +236,27 @@ const LeaderboardCard = React.forwardRef<HTMLDivElement, LeaderboardCardProps>(
         </div>
 
         {/* Code Block */}
-        <div className={codeBlock()}>{code}</div>
+        <div
+          data-code="true"
+          className={`${codeBlock()} ${
+            expandCode
+              ? "max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap break-words"
+              : ""
+          }`}
+        >
+          {code}
+        </div>
+
+        {onToggleExpand && (
+          <button
+            type="button"
+            onClick={onToggleExpand}
+            className="mt-2 inline-flex items-center gap-2 font-mono text-xs text-devroast-green hover:text-devroast-text-primary transition-colors cursor-pointer"
+          >
+            {expandCode ? "show less" : "show more"}
+            {expandCode ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        )}
 
         {/* Footer: Language + Action */}
         <div className={footer()}>
@@ -253,6 +278,8 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
       code,
       language,
       responsive = false,
+      expandCode = false,
+      onToggleExpand,
       className,
       ...props
     },
@@ -288,6 +315,8 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
               scoreColor={actualScoreColor}
               code={code}
               language={language}
+              expandCode={expandCode}
+              onToggleExpand={onToggleExpand}
               className={className}
               {...props}
             />
@@ -295,7 +324,11 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
 
           {/* Desktop Table Layout */}
           <div className="hidden md:block">
-            <TableRow ref={ref} className={className} {...props}>
+            <TableRow
+              ref={ref}
+              className={`${className ?? ""} ${expandCode ? "flex-wrap items-start gap-y-3" : ""}`}
+              {...props}
+            >
               <TableCell width={50} align="left">
                 <span className="text-devroast-text-muted font-mono text-[13px]">
                   #{rank}
@@ -310,14 +343,44 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
                 </span>
               </TableCell>
 
-              <TableCell width="auto" align="left" className="flex-1 mr-6">
-                <span className="text-devroast-text-secondary font-mono text-[12px] truncate">
-                  {code}
-                </span>
+              <TableCell
+                width={expandCode ? "100%" : "250px"}
+                align="left"
+                className={
+                  expandCode ? "w-full basis-full mr-0" : "flex-1 mr-6"
+                }
+              >
+                <div className="w-full">
+                  <span
+                    data-code="true"
+                    className={`text-devroast-text-secondary font-mono text-xs ${
+                      expandCode
+                        ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap break-words"
+                        : "truncate"
+                    }`}
+                  >
+                    {code}
+                  </span>
+
+                  {onToggleExpand && (
+                    <button
+                      type="button"
+                      onClick={onToggleExpand}
+                      className="mt-2 inline-flex items-center gap-2 font-mono text-xs text-devroast-green hover:text-devroast-text-primary transition-colors cursor-pointer"
+                    >
+                      {expandCode ? "show less" : "show more"}
+                      {expandCode ? (
+                        <ChevronUp size={14} />
+                      ) : (
+                        <ChevronDown size={14} />
+                      )}
+                    </button>
+                  )}
+                </div>
               </TableCell>
 
               <TableCell width={100} align="left">
-                <span className="text-devroast-text-muted font-mono text-[12px]">
+                <span className="text-devroast-text-muted font-mono text-xs">
                   {language}
                 </span>
               </TableCell>
@@ -345,13 +408,37 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
         </TableCell>
 
         <TableCell width="auto" align="left" className="flex-1 mr-6">
-          <span className="text-devroast-text-secondary font-mono text-[12px] truncate">
-            {code}
-          </span>
+          <div className="w-full">
+            <span
+              data-code="true"
+              className={`text-devroast-text-secondary font-mono text-xs ${
+                expandCode
+                  ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap break-words"
+                  : "truncate"
+              }`}
+            >
+              {code}
+            </span>
+
+            {onToggleExpand && (
+              <button
+                type="button"
+                onClick={onToggleExpand}
+                className="mt-2 inline-flex items-center gap-2 font-mono text-xs text-devroast-green hover:text-devroast-text-primary transition-colors cursor-pointer"
+              >
+                {expandCode ? "show less" : "show more"}
+                {expandCode ? (
+                  <ChevronUp size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
+              </button>
+            )}
+          </div>
         </TableCell>
 
         <TableCell width={100} align="left">
-          <span className="text-devroast-text-muted font-mono text-[12px]">
+          <span className="text-devroast-text-muted font-mono text-xs">
             {language}
           </span>
         </TableCell>
