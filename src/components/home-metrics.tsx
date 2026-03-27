@@ -6,7 +6,10 @@ import { AnimatedNumber } from "./ui/animated-number";
 
 export function HomeMetrics() {
   const trpc = useTRPC();
-  const { data } = useQuery(trpc.metrics.homepage.queryOptions());
+  const { data } = useQuery({
+    ...trpc.metrics.homepage.queryOptions(),
+    staleTime: 60 * 60 * 1000,
+  });
   const totalRoastedCodes = data?.totalRoastedCodes ?? 0;
   const avgScore = data?.avgScore ?? 0;
 

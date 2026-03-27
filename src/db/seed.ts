@@ -97,6 +97,66 @@ async function seed() {
           username: "bugcreator",
           email: "demo@devroast.com",
         },
+        {
+          sessionId: "session-001",
+          username: "nullpointer",
+          email: "nullpointer@devroast.com",
+        },
+        {
+          sessionId: "session-002",
+          username: "stacksmash",
+          email: "stacksmash@devroast.com",
+        },
+        {
+          sessionId: "session-003",
+          username: "lintwarrior",
+          email: "lintwarrior@devroast.com",
+        },
+        {
+          sessionId: "session-004",
+          username: "typesage",
+          email: "typesage@devroast.com",
+        },
+        {
+          sessionId: "session-005",
+          username: "callbackchaos",
+          email: "callbackchaos@devroast.com",
+        },
+        {
+          sessionId: "session-006",
+          username: "sqlninja",
+          email: "sqlninja@devroast.com",
+        },
+        {
+          sessionId: "session-007",
+          username: "featureflagger",
+          email: "featureflagger@devroast.com",
+        },
+        {
+          sessionId: "session-008",
+          username: "mergeconflict",
+          email: "mergeconflict@devroast.com",
+        },
+        {
+          sessionId: "session-009",
+          username: "packetloss",
+          email: "packetloss@devroast.com",
+        },
+        {
+          sessionId: "session-010",
+          username: "devopsmancer",
+          email: "devopsmancer@devroast.com",
+        },
+        {
+          sessionId: "session-011",
+          username: "regexrider",
+          email: "regexrider@devroast.com",
+        },
+        {
+          sessionId: "session-012",
+          username: "heapwalker",
+          email: "heapwalker@devroast.com",
+        },
       ])
       .returning();
 

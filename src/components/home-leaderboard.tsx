@@ -8,7 +8,10 @@ import { useTRPC } from "@/trpc/client";
 
 export function HomeLeaderboard() {
   const trpc = useTRPC();
-  const { data } = useSuspenseQuery(trpc.leaderboard.homepage.queryOptions());
+  const { data } = useSuspenseQuery({
+    ...trpc.leaderboard.homepage.queryOptions(),
+    staleTime: 60 * 60 * 1000,
+  });
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
 
   const toggleRow = (rank: number) => {

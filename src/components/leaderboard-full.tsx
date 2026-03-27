@@ -5,9 +5,14 @@ import { useState } from "react";
 import { LeaderboardRow, TableCell, TableRow } from "@/components/ui/table-row";
 import { useTRPC } from "@/trpc/client";
 
+const FULL_LEADERBOARD_LIMIT = 20;
+
 export function LeaderboardFull() {
   const trpc = useTRPC();
-  const { data } = useSuspenseQuery(trpc.leaderboard.full.queryOptions());
+  const { data } = useSuspenseQuery({
+    ...trpc.leaderboard.full.queryOptions({ limit: FULL_LEADERBOARD_LIMIT }),
+    staleTime: 60 * 60 * 1000,
+  });
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   const toggleRow = (rowKey: string) => {

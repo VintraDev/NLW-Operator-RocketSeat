@@ -1,6 +1,9 @@
+import { cacheLife } from "next/cache";
 import { Suspense } from "react";
 import { getQueryClient, HydrateClient, trpc } from "@/trpc/server";
 import { LeaderboardFull } from "./leaderboard-full";
+
+const FULL_LEADERBOARD_LIMIT = 20;
 
 function LeaderboardFullSkeleton() {
   return (
@@ -22,9 +25,14 @@ function LeaderboardFullSkeleton() {
   );
 }
 
-export function LeaderboardFullSection() {
+export async function LeaderboardFullSection() {
+  "use cache";
+  cacheLife("hours");
+
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(trpc.leaderboard.full.queryOptions());
+  void queryClient.prefetchQuery(
+    trpc.leaderboard.full.queryOptions({ limit: FULL_LEADERBOARD_LIMIT }),
+  );
 
   return (
     <HydrateClient>
