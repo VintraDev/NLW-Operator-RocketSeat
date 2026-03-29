@@ -6,6 +6,7 @@ import {
   deleteSubmissionImprovements,
   findUserBySessionId,
   getCodeSubmissionById,
+  getLatestSubmissionCheckpoint,
   getRoastResultById,
   resetCodeSubmissionForRetry,
 } from "@/db/queries";
@@ -18,6 +19,8 @@ const roastImprovementSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
   description: z.string().nullable(),
+  improvedCode: z.string(),
+  diffPatch: z.string().nullable(),
   improvementType: z.enum([
     "performance",
     "readability",
@@ -51,6 +54,13 @@ const roastSubmissionSchema = z.object({
 const roastGetByIdOutputSchema = z.object({
   submission: roastSubmissionSchema,
   improvements: z.array(roastImprovementSchema),
+  progress: z
+    .object({
+      value: z.number().int().min(0).max(100),
+      stage: z.string(),
+      details: z.string().nullable(),
+    })
+    .nullable(),
   error: z
     .object({
       message: z.string(),
@@ -129,9 +139,33 @@ export const roastRouter = createTRPCRouter({
             }
           : null;
 
+      const checkpoint = await getLatestSubmissionCheckpoint(input.roastId);
+      const checkpointMessage = checkpoint?.promptTemplate || "";
+      const checkpointStageMatch = checkpointMessage.match(/^\[(.*?)\]/);
+
+      const progress = checkpoint
+        ? {
+            value: Math.max(0, Math.min(100, checkpoint.tokensUsed || 0)),
+            stage: checkpointStageMatch?.[1] || "processing",
+            details: checkpointMessage || null,
+          }
+        : payload.submission.status === "completed" ||
+            payload.submission.status === "failed"
+          ? {
+              value: 100,
+              stage: payload.submission.status,
+              details: null,
+            }
+          : {
+              value: 12,
+              stage: "queued",
+              details: null,
+            };
+
       return {
         submission: payload.submission,
         improvements: payload.improvements,
+        progress,
         error,
       };
     }),

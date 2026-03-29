@@ -3,6 +3,7 @@ import "server-only";
 import {
   createAnalysisSession,
   createCodeImprovement,
+  createCodeSubmissionCheckpoint,
   deleteSubmissionImprovements,
   markCodeSubmissionAnalyzing,
   markCodeSubmissionFailed,
@@ -49,7 +50,19 @@ export async function analyzeSubmission(params: {
 }) {
   const startedAt = Date.now();
 
+  await createCodeSubmissionCheckpoint(params.submissionId, {
+    stage: "queued",
+    progress: 8,
+    details: "submission queued for ai analysis",
+  });
+
   await markCodeSubmissionAnalyzing(params.submissionId);
+
+  await createCodeSubmissionCheckpoint(params.submissionId, {
+    stage: "prompting",
+    progress: 22,
+    details: "building and sending prompt to gemini",
+  });
 
   let lastError: unknown = null;
   let modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
@@ -62,6 +75,12 @@ export async function analyzeSubmission(params: {
         roastMode: params.roastMode,
       });
 
+      await createCodeSubmissionCheckpoint(params.submissionId, {
+        stage: "parsing",
+        progress: 58,
+        details: "parsing structured response",
+      });
+
       modelName = model;
 
       await updateCodeSubmissionAnalysis(params.submissionId, {
@@ -72,6 +91,12 @@ export async function analyzeSubmission(params: {
         status: "completed",
       });
 
+      await createCodeSubmissionCheckpoint(params.submissionId, {
+        stage: "persisting",
+        progress: 76,
+        details: "saving improvements and metadata",
+      });
+
       await deleteSubmissionImprovements(params.submissionId);
 
       for (const improvement of analysis.improvements) {
@@ -79,7 +104,8 @@ export async function analyzeSubmission(params: {
           submissionId: params.submissionId,
           title: improvement.title,
           description: improvement.description || undefined,
-          improvedCode: params.code,
+          improvedCode: analysis.improvedCode,
+          diffPatch: analysis.diffPatch || undefined,
           improvementType: improvement.improvementType,
           priority: improvement.priority,
           lineStart: improvement.lineStart || undefined,
@@ -101,6 +127,12 @@ export async function analyzeSubmission(params: {
         shameScore: analysis.shameScore,
         language: params.language,
         codePreview: params.code.slice(0, 120),
+      });
+
+      await createCodeSubmissionCheckpoint(params.submissionId, {
+        stage: "completed",
+        progress: 100,
+        details: "analysis completed",
       });
 
       return;
@@ -132,5 +164,11 @@ export async function analyzeSubmission(params: {
   await markCodeSubmissionFailed(params.submissionId, {
     errorMessage,
     analysisDurationMs: Date.now() - startedAt,
+  });
+
+  await createCodeSubmissionCheckpoint(params.submissionId, {
+    stage: "failed",
+    progress: 100,
+    details: errorMessage,
   });
 }

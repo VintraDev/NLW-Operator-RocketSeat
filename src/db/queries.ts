@@ -359,6 +359,48 @@ export async function createAnalysisSession(sessionData: {
   return result[0];
 }
 
+export async function createCodeSubmissionCheckpoint(
+  submissionId: string,
+  checkpoint: {
+    stage: string;
+    progress: number;
+    details?: string;
+  },
+) {
+  const safeProgress = Math.max(
+    0,
+    Math.min(100, Math.trunc(checkpoint.progress)),
+  );
+
+  const message = checkpoint.details
+    ? `[${checkpoint.stage}] ${checkpoint.details} (${safeProgress}%)`
+    : `[${checkpoint.stage}] (${safeProgress}%)`;
+
+  const result = await db
+    .insert(analysisSessions)
+    .values({
+      submissionId,
+      aiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+      promptTemplate: message,
+      tokensUsed: safeProgress,
+      success: true,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function getLatestSubmissionCheckpoint(submissionId: string) {
+  const result = await db
+    .select()
+    .from(analysisSessions)
+    .where(eq(analysisSessions.submissionId, submissionId))
+    .orderBy(desc(analysisSessions.createdAt))
+    .limit(1);
+
+  return result[0] || null;
+}
+
 /**
  * Get AI usage statistics
  */

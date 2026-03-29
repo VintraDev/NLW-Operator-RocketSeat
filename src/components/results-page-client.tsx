@@ -1,9 +1,10 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { CodeBlockWithCopy } from "@/components/ui/code-block";
+import { DiffLine } from "@/components/ui/diff-line";
 import { getScoreColorFromValue } from "@/components/ui/score-badge";
 import { ScoreHero } from "@/components/ui/score-hero";
 import { Text } from "@/components/ui/typography";
@@ -72,9 +73,106 @@ function normalizeLanguageForDisplay(language: string): SupportedLanguage {
   return "javascript";
 }
 
+type DiffLineItem = {
+  type: "added" | "removed" | "context";
+  code: string;
+};
+
+function parseUnifiedDiff(
+  diffPatch: string | null | undefined,
+): DiffLineItem[] {
+  if (!diffPatch) {
+    return [];
+  }
+
+  const lines = diffPatch.split("\n");
+  const result: DiffLineItem[] = [];
+
+  for (const line of lines) {
+    if (
+      !line ||
+      line.startsWith("@@") ||
+      line.startsWith("---") ||
+      line.startsWith("+++")
+    ) {
+      continue;
+    }
+
+    if (line.startsWith("+")) {
+      result.push({ type: "added", code: line.slice(1) });
+      continue;
+    }
+
+    if (line.startsWith("-")) {
+      result.push({ type: "removed", code: line.slice(1) });
+      continue;
+    }
+
+    result.push({
+      type: "context",
+      code: line.startsWith(" ") ? line.slice(1) : line,
+    });
+  }
+
+  return result;
+}
+
+function createDiffLines(params: {
+  originalCode: string;
+  improvedCode: string;
+}): DiffLineItem[] {
+  const originalLines = params.originalCode
+    .split("\n")
+    .map((line) => line.trimEnd());
+  const improvedLines = params.improvedCode
+    .split("\n")
+    .map((line) => line.trimEnd());
+
+  if (originalLines.join("\n") === improvedLines.join("\n")) {
+    return originalLines.slice(0, 10).map((line) => ({
+      type: "context",
+      code: line,
+    }));
+  }
+
+  const maxLength = Math.max(originalLines.length, improvedLines.length);
+  const result: DiffLineItem[] = [];
+
+  for (let index = 0; index < maxLength; index++) {
+    const original = originalLines[index];
+    const improved = improvedLines[index];
+
+    if (original === improved) {
+      if (original !== undefined) {
+        result.push({
+          type: "context",
+          code: original,
+        });
+      }
+
+      continue;
+    }
+
+    if (original !== undefined) {
+      result.push({
+        type: "removed",
+        code: original,
+      });
+    }
+
+    if (improved !== undefined) {
+      result.push({
+        type: "added",
+        code: improved,
+      });
+    }
+  }
+
+  return result.slice(0, 18);
+}
+
 export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
   const trpc = useTRPC();
-  const [loadingProgress, setLoadingProgress] = useState(12);
 
   const roastQuery = useQuery({
     ...trpc.roast.getById.queryOptions({ roastId }),
@@ -101,27 +199,9 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
 
   const status = payload?.submission.status;
   const isLoading = !payload || status === "pending" || status === "analyzing";
-
-  useEffect(() => {
-    if (!isLoading) {
-      setLoadingProgress(100);
-      return;
-    }
-
-    setLoadingProgress(12);
-
-    const interval = setInterval(() => {
-      setLoadingProgress((previous) => {
-        if (previous >= 88) {
-          return 20;
-        }
-
-        return Math.min(previous + 8, 88);
-      });
-    }, 700);
-
-    return () => clearInterval(interval);
-  }, [isLoading]);
+  const progressValue = payload?.progress?.value ?? 12;
+  const progressStage = payload?.progress?.stage || "queued";
+  const progressDetails = payload?.progress?.details;
 
   const linesCount = useMemo(() => {
     const code = payload?.submission.originalCode ?? "";
@@ -146,12 +226,17 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
           <div className="h-1 w-full bg-devroast-border overflow-hidden">
             <div
               className="h-full bg-devroast-green transition-all duration-500 ease-out"
-              style={{ width: `${loadingProgress}%` }}
+              style={{ width: `${progressValue}%` }}
             />
           </div>
           <Text className="font-mono text-xs text-devroast-text-muted">
-            {`progress: ${loadingProgress}%`}
+            {`progress: ${progressValue}% | stage: ${progressStage}`}
           </Text>
+          {progressDetails ? (
+            <Text className="font-[IBM_Plex_Mono] text-xs text-devroast-text-muted">
+              {progressDetails}
+            </Text>
+          ) : null}
         </div>
       </section>
     );
@@ -199,6 +284,17 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
   const technicalFeedback =
     payload.submission.aiFeedback || "Sem feedback tecnico detalhado.";
   const scoreColor = getScoreColorFromValue(score);
+  const primaryImprovement = payload.improvements[0];
+  const suggestedCode =
+    primaryImprovement?.improvedCode?.trim() || payload.submission.originalCode;
+  const unifiedDiffLines = parseUnifiedDiff(primaryImprovement?.diffPatch);
+  const suggestedDiffLines =
+    unifiedDiffLines.length > 0
+      ? unifiedDiffLines
+      : createDiffLines({
+          originalCode: payload.submission.originalCode,
+          improvedCode: suggestedCode,
+        });
 
   return (
     <div className="w-full flex flex-col gap-8 sm:gap-10">
@@ -278,6 +374,39 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
             nenhum ponto de melhoria foi retornado para este roast.
           </Text>
         )}
+      </section>
+
+      <div className="h-px bg-devroast-border" />
+
+      <section className="flex flex-col gap-6">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-devroast-green">{"//"}</span>
+          <h2 className="text-sm font-bold text-devroast-text-primary">
+            suggested_fix
+          </h2>
+        </div>
+
+        <div className="w-full border border-devroast-border bg-devroast-input overflow-hidden">
+          <div className="flex items-center h-10 px-4 border-b border-devroast-border">
+            <span className="text-xs font-medium text-devroast-text-secondary">
+              {"your_code.ts -> improved_code.ts"}
+            </span>
+          </div>
+
+          <div className="py-1">
+            {suggestedDiffLines.length > 0 ? (
+              suggestedDiffLines.map((line, index) => (
+                <DiffLine
+                  key={`${line.type}-${index}-${line.code}`}
+                  type={line.type}
+                  code={line.code}
+                />
+              ))
+            ) : (
+              <DiffLine type="context" code="// no suggestion available" />
+            )}
+          </div>
+        </div>
       </section>
     </div>
   );

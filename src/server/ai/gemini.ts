@@ -24,6 +24,8 @@ const roastAnalysisSchema = z.object({
   shameScore: z.number().int().min(1).max(10),
   roastText: z.string().min(1),
   technicalFeedback: z.string().min(1),
+  improvedCode: z.string().optional().default(""),
+  diffPatch: z.string().nullable().optional().default(null),
   improvements: z.array(analysisImprovementSchema).default([]),
 });
 
@@ -62,10 +64,12 @@ function buildRoastPrompt(params: {
     toneInstruction,
     "Evaluate code quality and return ONLY valid JSON.",
     "Return shape:",
-    '{"shameScore": number(1-10), "roastText": string, "technicalFeedback": string, "improvements": [{"title": string, "description": string|null, "improvementType": "performance"|"readability"|"security"|"best_practices"|"bug_fix"|"code_style"|"architecture", "priority": "low"|"medium"|"high"|"critical", "lineStart": number|null, "lineEnd": number|null}]}',
+    '{"shameScore": number(1-10), "roastText": string, "technicalFeedback": string, "improvedCode": string, "diffPatch": string|null, "improvements": [{"title": string, "description": string|null, "improvementType": "performance"|"readability"|"security"|"best_practices"|"bug_fix"|"code_style"|"architecture", "priority": "low"|"medium"|"high"|"critical", "lineStart": number|null, "lineEnd": number|null}]}',
     "Rules:",
     "- shameScore must be an integer between 1 and 10.",
     "- technicalFeedback should be objective and concise.",
+    "- improvedCode must be a full improved version of the submitted code.",
+    "- diffPatch should be a unified diff string when possible, otherwise null.",
     "- improvements should include only actionable suggestions.",
     `Language: ${params.language}`,
     "Code:",
