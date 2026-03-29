@@ -22,6 +22,30 @@ export default async function ResultsPage({
 }: {
   params: Promise<{ roastId: string }>;
 }) {
+  return (
+    <div className="min-h-screen bg-devroast-bg text-devroast-text-primary font-mono">
+      <Suspense
+        fallback={
+          <main className="w-full px-4 sm:px-6 lg:px-20 py-10">
+            <div className="w-full border border-devroast-border bg-devroast-surface p-6 sm:p-8">
+              <span className="font-mono text-sm text-devroast-green">
+                {"// loading_roast"}
+              </span>
+            </div>
+          </main>
+        }
+      >
+        <ResultsPageContent params={params} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function ResultsPageContent({
+  params,
+}: {
+  params: Promise<{ roastId: string }>;
+}) {
   const { roastId } = await params;
 
   if (!UUID_REGEX.test(roastId)) {
@@ -29,7 +53,7 @@ export default async function ResultsPage({
   }
 
   return (
-    <div className="min-h-screen bg-devroast-bg text-devroast-text-primary font-mono">
+    <>
       <nav className="flex items-center justify-between h-14 px-4 sm:px-6 lg:px-10 border-b border-devroast-border">
         <Link
           href="/"
@@ -47,18 +71,8 @@ export default async function ResultsPage({
       </nav>
 
       <main className="w-full px-4 sm:px-6 lg:px-20 py-10">
-        <Suspense
-          fallback={
-            <div className="w-full border border-devroast-border bg-devroast-surface p-6 sm:p-8">
-              <span className="font-mono text-sm text-devroast-green">
-                {"// loading_roast"}
-              </span>
-            </div>
-          }
-        >
-          <ResultsPageClient roastId={roastId} />
-        </Suspense>
+        <ResultsPageClient roastId={roastId} />
       </main>
-    </div>
+    </>
   );
 }

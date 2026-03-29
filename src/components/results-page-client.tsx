@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CodeBlockWithCopy } from "@/components/ui/code-block";
 import { getScoreColorFromValue } from "@/components/ui/score-badge";
@@ -28,11 +28,11 @@ function getVerdict(score: number) {
 }
 
 function getCardSeverity(priority: "low" | "medium" | "high" | "critical") {
-  if (priority === "critical") {
+  if (priority === "critical" || priority === "high") {
     return "critical" as const;
   }
 
-  if (priority === "high" || priority === "medium") {
+  if (priority === "medium") {
     return "warning" as const;
   }
 
@@ -74,6 +74,7 @@ function normalizeLanguageForDisplay(language: string): SupportedLanguage {
 
 export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
   const trpc = useTRPC();
+  const [loadingProgress, setLoadingProgress] = useState(12);
 
   const roastQuery = useQuery({
     ...trpc.roast.getById.queryOptions({ roastId }),
@@ -101,6 +102,27 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
   const status = payload?.submission.status;
   const isLoading = !payload || status === "pending" || status === "analyzing";
 
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingProgress(100);
+      return;
+    }
+
+    setLoadingProgress(12);
+
+    const interval = setInterval(() => {
+      setLoadingProgress((previous) => {
+        if (previous >= 88) {
+          return 20;
+        }
+
+        return Math.min(previous + 8, 88);
+      });
+    }, 700);
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
   const linesCount = useMemo(() => {
     const code = payload?.submission.originalCode ?? "";
 
@@ -122,8 +144,14 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
             segurando o compilador com uma mao e o sarcasmo com a outra...
           </Text>
           <div className="h-1 w-full bg-devroast-border overflow-hidden">
-            <div className="h-full w-1/3 bg-devroast-green animate-pulse" />
+            <div
+              className="h-full bg-devroast-green transition-all duration-500 ease-out"
+              style={{ width: `${loadingProgress}%` }}
+            />
           </div>
+          <Text className="font-mono text-xs text-devroast-text-muted">
+            {`progress: ${loadingProgress}%`}
+          </Text>
         </div>
       </section>
     );
@@ -230,10 +258,18 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
                 key={improvement.id}
                 severity={getCardSeverity(improvement.priority)}
                 title={improvement.title}
-                description={
+                description={[
+                  `priority: ${improvement.priority}`,
+                  improvement.lineStart
+                    ? improvement.lineEnd
+                      ? `linhas ${improvement.lineStart}-${improvement.lineEnd}`
+                      : `linha ${improvement.lineStart}`
+                    : null,
                   improvement.description ||
-                  "Melhoria sugerida sem descricao adicional."
-                }
+                    "Melhoria sugerida sem descricao adicional.",
+                ]
+                  .filter(Boolean)
+                  .join(" | ")}
               />
             ))}
           </div>
