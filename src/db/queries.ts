@@ -88,6 +88,47 @@ export async function createCodeSubmission(submissionData: {
   return result[0];
 }
 
+export async function getCodeSubmissionById(submissionId: string) {
+  const result = await db
+    .select()
+    .from(codeSubmissions)
+    .where(eq(codeSubmissions.id, submissionId))
+    .limit(1);
+
+  return result[0] || null;
+}
+
+export async function markCodeSubmissionAnalyzing(submissionId: string) {
+  const result = await db
+    .update(codeSubmissions)
+    .set({
+      status: "analyzing",
+      updatedAt: sql`now()`,
+    })
+    .where(eq(codeSubmissions.id, submissionId))
+    .returning();
+
+  return result[0] || null;
+}
+
+export async function resetCodeSubmissionForRetry(submissionId: string) {
+  const result = await db
+    .update(codeSubmissions)
+    .set({
+      status: "pending",
+      shameScore: null,
+      aiFeedback: null,
+      aiRoast: null,
+      analysisDurationMs: null,
+      analyzedAt: null,
+      updatedAt: sql`now()`,
+    })
+    .where(eq(codeSubmissions.id, submissionId))
+    .returning();
+
+  return result[0] || null;
+}
+
 /**
  * Update code submission after analysis
  */
@@ -105,6 +146,28 @@ export async function updateCodeSubmissionAnalysis(
     .update(codeSubmissions)
     .set({
       ...analysisData,
+      analyzedAt: sql`now()`,
+      updatedAt: sql`now()`,
+    })
+    .where(eq(codeSubmissions.id, submissionId))
+    .returning();
+
+  return result[0] || null;
+}
+
+export async function markCodeSubmissionFailed(
+  submissionId: string,
+  failureData: {
+    errorMessage: string;
+    analysisDurationMs: number;
+  },
+) {
+  const result = await db
+    .update(codeSubmissions)
+    .set({
+      status: "failed",
+      aiFeedback: failureData.errorMessage,
+      analysisDurationMs: failureData.analysisDurationMs,
       analyzedAt: sql`now()`,
       updatedAt: sql`now()`,
     })
@@ -374,6 +437,27 @@ export async function getSubmissionImprovements(submissionId: string) {
     .orderBy(desc(codeImprovements.createdAt));
 
   return result;
+}
+
+export async function deleteSubmissionImprovements(submissionId: string) {
+  await db
+    .delete(codeImprovements)
+    .where(eq(codeImprovements.submissionId, submissionId));
+}
+
+export async function getRoastResultById(submissionId: string) {
+  const submission = await getCodeSubmissionById(submissionId);
+
+  if (!submission) {
+    return null;
+  }
+
+  const improvements = await getSubmissionImprovements(submissionId);
+
+  return {
+    submission,
+    improvements,
+  };
 }
 
 /**
