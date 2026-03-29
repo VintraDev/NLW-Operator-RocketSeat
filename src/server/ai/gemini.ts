@@ -1,0 +1,130 @@
+import "server-only";
+
+import { GoogleGenAI } from "@google/genai";
+import { z } from "zod";
+
+const analysisImprovementSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().nullable().optional().default(null),
+  improvementType: z.enum([
+    "performance",
+    "readability",
+    "security",
+    "best_practices",
+    "bug_fix",
+    "code_style",
+    "architecture",
+  ]),
+  priority: z.enum(["low", "medium", "high", "critical"]),
+  lineStart: z.number().int().nullable().optional().default(null),
+  lineEnd: z.number().int().nullable().optional().default(null),
+});
+
+const roastAnalysisSchema = z.object({
+  shameScore: z.number().int().min(1).max(10),
+  roastText: z.string().min(1),
+  technicalFeedback: z.string().min(1),
+  improvements: z.array(analysisImprovementSchema).default([]),
+});
+
+export type RoastAnalysis = z.infer<typeof roastAnalysisSchema>;
+
+type GeminiConfig = {
+  apiKey: string;
+  model: string;
+};
+
+export function getGeminiConfig(): GeminiConfig {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Missing GEMINI_API_KEY for roast analysis.");
+  }
+
+  return {
+    apiKey,
+    model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+  };
+}
+
+function buildRoastPrompt(params: {
+  code: string;
+  language: string;
+  roastMode: "roast" | "honest";
+}) {
+  const toneInstruction =
+    params.roastMode === "roast"
+      ? "Use sarcastic and sharp humor in roastText, but keep technical accuracy."
+      : "Use brutally honest but constructive tone in roastText without sarcasm.";
+
+  return [
+    "You are DevRoast, an expert code reviewer.",
+    toneInstruction,
+    "Evaluate code quality and return ONLY valid JSON.",
+    "Return shape:",
+    '{"shameScore": number(1-10), "roastText": string, "technicalFeedback": string, "improvements": [{"title": string, "description": string|null, "improvementType": "performance"|"readability"|"security"|"best_practices"|"bug_fix"|"code_style"|"architecture", "priority": "low"|"medium"|"high"|"critical", "lineStart": number|null, "lineEnd": number|null}]}',
+    "Rules:",
+    "- shameScore must be an integer between 1 and 10.",
+    "- technicalFeedback should be objective and concise.",
+    "- improvements should include only actionable suggestions.",
+    `Language: ${params.language}`,
+    "Code:",
+    params.code,
+  ].join("\n");
+}
+
+function extractJsonObject(rawText: string) {
+  const trimmed = rawText.trim();
+
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    return trimmed;
+  }
+
+  const jsonBlock = trimmed.match(/```json\s*([\s\S]*?)```/i);
+  if (jsonBlock?.[1]) {
+    return jsonBlock[1].trim();
+  }
+
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return trimmed.slice(firstBrace, lastBrace + 1);
+  }
+
+  throw new Error("Gemini response did not contain a valid JSON object.");
+}
+
+export function parseGeminiAnalysis(rawText: string): RoastAnalysis {
+  const jsonString = extractJsonObject(rawText);
+  const parsed = JSON.parse(jsonString);
+
+  return roastAnalysisSchema.parse(parsed);
+}
+
+export async function generateRoastAnalysis(params: {
+  code: string;
+  language: string;
+  roastMode: "roast" | "honest";
+}) {
+  const { apiKey, model } = getGeminiConfig();
+  const client = new GoogleGenAI({ apiKey });
+  const prompt = buildRoastPrompt(params);
+
+  const response = await client.models.generateContent({
+    model,
+    contents: prompt,
+  });
+
+  const rawText = response.text;
+
+  if (!rawText) {
+    throw new Error("Gemini returned an empty response.");
+  }
+
+  return {
+    model,
+    rawText,
+    analysis: parseGeminiAnalysis(rawText),
+  };
+}

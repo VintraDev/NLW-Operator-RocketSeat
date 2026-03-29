@@ -1,7 +1,6 @@
 import { forwardRef } from "react";
 import { tv, type VariantProps } from "tailwind-variants";
 import { Badge } from "./badge";
-import { getScoreColorFromValue } from "./score-badge";
 import { ScoreRing } from "./score-ring";
 
 const scoreHeroVariants = tv({
@@ -77,6 +76,7 @@ export interface ScoreHeroProps
   language: string;
   lines: number;
   onShare?: () => void;
+  showShareButton?: boolean;
   responsive?: boolean;
 }
 
@@ -90,6 +90,7 @@ const ScoreHero = forwardRef<HTMLDivElement, ScoreHeroProps>(
       language,
       lines,
       onShare,
+      showShareButton = false,
       responsive,
       ...props
     },
@@ -138,16 +139,18 @@ const ScoreHero = forwardRef<HTMLDivElement, ScoreHeroProps>(
           </div>
 
           {/* Share Button */}
-          <div>
-            <button
-              type="button"
-              className={shareButton()}
-              onClick={onShare}
-              aria-label="Share roast"
-            >
-              $ share_roast
-            </button>
-          </div>
+          {showShareButton ? (
+            <div>
+              <button
+                type="button"
+                className={shareButton()}
+                onClick={onShare}
+                aria-label="Share roast"
+              >
+                $ share_roast
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     );

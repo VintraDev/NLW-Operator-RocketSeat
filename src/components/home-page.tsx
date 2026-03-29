@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import Header from "@/components/ui/header";
 import { Toggle } from "@/components/ui/toggle";
 import { H1, Text } from "@/components/ui/typography";
 import type { SupportedLanguage } from "@/lib/syntax-highlighting";
+import { useTRPC } from "@/trpc/client";
 
 type HomePageProps = {
   metrics: React.ReactNode;
@@ -15,6 +17,7 @@ type HomePageProps = {
 };
 
 export function HomePage({ metrics, leaderboard }: HomePageProps) {
+  const trpc = useTRPC();
   const router = useRouter();
   const [roastMode, setRoastMode] = useState(true);
   const [detectedLanguage, setDetectedLanguage] =
@@ -40,8 +43,24 @@ function calculateTotal(items) {
   return total;
 }`);
 
+  const roastCreateMutation = useMutation(
+    trpc.roast.create.mutationOptions({
+      onSuccess: ({ roastId }) => {
+        router.push(`/results/${roastId}`);
+      },
+    }),
+  );
+
   const handleRoastCode = () => {
-    router.push("/results/123e4567-e89b-12d3-a456-426614174000");
+    if (!code.trim() || isCodeOverLimit) {
+      return;
+    }
+
+    roastCreateMutation.mutate({
+      code,
+      language: detectedLanguage || "plaintext",
+      roastMode: roastMode ? "roast" : "honest",
+    });
   };
 
   return (
@@ -123,9 +142,11 @@ function calculateTotal(items) {
                 responsive={true}
                 onClick={handleRoastCode}
                 className="w-full sm:w-auto"
-                disabled={isCodeOverLimit}
+                disabled={isCodeOverLimit || roastCreateMutation.isPending}
               >
-                $ roast_my_code
+                {roastCreateMutation.isPending
+                  ? "$ roasting..."
+                  : "$ roast_my_code"}
               </Button>
             </div>
           </div>
