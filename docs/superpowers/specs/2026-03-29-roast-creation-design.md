@@ -13,6 +13,8 @@ The first version must:
 - Support code submission from the homepage.
 - Run analysis asynchronously and show progress in the results page.
 - Support two modes (`roast` and `honest`) where mode changes only textual tone.
+- Use Gemini as the AI provider for analysis generation.
+- Allow Gemini model selection by environment variable with a safe default.
 - Render an "Essencial+" result payload: score, roast text, technical feedback, improvement list, and submitted code.
 - Use anonymous session-based users (no login required).
 
@@ -53,11 +55,31 @@ Add a new `roast` router with procedures:
 Use in-process server orchestration for v1:
 
 - Transition state `pending -> analyzing -> completed | failed`.
-- Execute AI analysis with bounded retries (max 2 retries after initial attempt).
+- Execute AI analysis with Gemini and bounded retries (max 2 retries after initial attempt).
 - Persist final outputs in existing tables.
 - Update leaderboard only on `completed` submissions.
 
-### 3.3 Frontend Flow
+### 3.3 AI Provider Configuration (Gemini)
+
+Provider decision for v1:
+
+- Provider: Gemini API.
+- Model selection strategy: configurable by environment variable.
+- Default model: `gemini-2.5-flash`.
+- Override model: `GEMINI_MODEL`.
+
+Required environment variables:
+
+- `GEMINI_API_KEY` (required)
+- `GEMINI_MODEL` (optional, defaults to `gemini-2.5-flash`)
+
+Behavioral rules:
+
+- Application startup/runtime must fail gracefully (clear error) if `GEMINI_API_KEY` is missing when analysis is requested.
+- If `GEMINI_MODEL` is invalid/unavailable, fall back to explicit failure for observability (no silent model switching).
+- Persist selected model name in `analysis_sessions.aiModel` for auditing.
+
+### 3.4 Frontend Flow
 
 - Home submits via `roast.create` and redirects to `/results/[roastId]`.
 - Results page polls `roast.getById` while status is `pending` or `analyzing`.
@@ -105,7 +127,7 @@ Score evaluation and improvement extraction logic remain equivalent across modes
   - `analysisDurationMs`, `analyzedAt`, `status=completed`
 - Related rows:
   - `code_improvements` entries from structured analysis output
-  - `analysis_sessions` with request/response metadata and success status
+  - `analysis_sessions` with request/response metadata, selected Gemini model, and success status
 
 ## 6. API Contracts
 
@@ -217,6 +239,7 @@ Retry policy for analysis execution:
 - Backoff schedule: 1s then 3s.
 - Retry only transient failures (timeout, temporary upstream failure, short-term rate limit).
 - Non-transient failures can fail fast.
+- Provider-specific failures (invalid API key, invalid model, hard quota errors) are treated as non-transient.
 
 Failure persistence:
 
@@ -259,18 +282,28 @@ Render per state:
 - Anonymous user model via session ID cookie.
 - API procedures must always resolve to a session-backed user.
 - No authentication wall for creating/viewing own roast flow in v1.
+- Gemini credentials are server-only and never exposed to client bundles.
 
-## 10. Testing Strategy
+## 10. Environment Configuration
 
-### 10.1 Backend
+- `GEMINI_API_KEY`: required in server environment for analysis operations.
+- `GEMINI_MODEL`: optional model override.
+  - Default when not set: `gemini-2.5-flash`.
+  - Recommended production usage: set explicitly per environment.
+
+## 11. Testing Strategy
+
+### 11.1 Backend
 
 - `roast.create` creates valid submission and returns UUID.
 - State transitions are correct through success and failure scenarios.
 - Automatic retries execute only for transient failures.
 - `roast.getById` contract is consistent per status.
 - `roast.retry` reprocesses same submission ID and transitions correctly.
+- Selected Gemini model is written to `analysis_sessions.aiModel`.
+- Missing/invalid Gemini env config produces deterministic failure behavior.
 
-### 10.2 Frontend
+### 11.2 Frontend
 
 - Home submit triggers mutation and redirect.
 - Results polling runs during `pending/analyzing` and stops on terminal states.
@@ -278,14 +311,15 @@ Render per state:
 - Failed view shows retry CTA and resumes flow after retry.
 - Mode toggle value is sent correctly to backend.
 
-### 10.3 Integration Acceptance Criteria
+### 11.3 Integration Acceptance Criteria
 
 - User can submit code and get a completed roast end-to-end.
 - Roast mode changes only roast text tone.
 - Leaderboard update happens only on completed analysis.
 - No share roast functionality is visible or callable.
+- Gemini is the active provider and model follows `GEMINI_MODEL` or default fallback.
 
-## 11. Rollout and Boundaries
+## 12. Rollout and Boundaries
 
 - This spec is intentionally scoped to a single implementation cycle.
 - Queue workers, streaming updates, and sharing can be defined in follow-up specs.
