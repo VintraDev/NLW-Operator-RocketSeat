@@ -126,6 +126,19 @@ export function parseGeminiAnalysis(rawText: string): RoastAnalysis {
   return roastAnalysisSchema.parse(parsed);
 }
 
+function isRoastTextTooBigError(error: unknown) {
+  if (error instanceof z.ZodError) {
+    return error.issues.some(
+      (issue) =>
+        issue.code === "too_big" &&
+        issue.path.length > 0 &&
+        issue.path[0] === "roastText",
+    );
+  }
+
+  return false;
+}
+
 export async function generateRoastAnalysis(params: {
   code: string;
   language: string;
@@ -156,7 +169,42 @@ export async function generateRoastAnalysis(params: {
     throw new Error("Gemini returned an empty response.");
   }
 
-  const parsed = parseGeminiAnalysis(rawText);
+  let parsed: RoastAnalysis;
+
+  try {
+    parsed = parseGeminiAnalysis(rawText);
+  } catch (error) {
+    if (!isRoastTextTooBigError(error)) {
+      throw error;
+    }
+
+    const rewriteResponse = await client.models.generateContent({
+      model,
+      contents: [
+        "Your previous JSON failed validation because roastText exceeded 110 characters.",
+        "Rewrite the roastText to one sentence with <=110 characters.",
+        "Keep shameScore, technicalFeedback, improvedCode, diffPatch, and improvements equivalent.",
+        "Return ONLY valid JSON in the exact same schema.",
+        "Previous output:",
+        rawText,
+      ].join("\n"),
+      config: {
+        temperature: 0,
+        topP: 0.1,
+        topK: 1,
+        candidateCount: 1,
+        seed: (seed % 2147483646) + 1,
+      },
+    });
+
+    const rewrittenText = rewriteResponse.text;
+
+    if (!rewrittenText) {
+      throw error;
+    }
+
+    parsed = parseGeminiAnalysis(rewrittenText);
+  }
 
   return {
     model,
