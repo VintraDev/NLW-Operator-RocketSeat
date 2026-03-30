@@ -229,19 +229,47 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
 
   if (isLoading) {
     return (
-      <section className="w-full border border-devroast-border bg-devroast-surface p-6 sm:p-8">
-        <div className="flex flex-col gap-3">
-          <Text className="font-mono text-sm text-devroast-green">
-            {"// analyzing_your_code"}
-          </Text>
-          <div className="flex flex-col gap-3 animate-pulse">
-            <div className="h-3 w-60 bg-devroast-border" />
-            <div className="h-3 w-48 bg-devroast-border" />
+      <div className="w-full flex flex-col gap-8 sm:gap-10 animate-pulse">
+        <section className="w-full border border-devroast-border bg-devroast-surface p-6 sm:p-8">
+          <div className="flex flex-col gap-4">
+            <div className="h-4 w-48 bg-devroast-border" />
+            <div className="h-12 w-36 bg-devroast-border" />
             <div className="h-3 w-full bg-devroast-border" />
-            <div className="h-24 w-full bg-devroast-input border border-devroast-border" />
+            <div className="h-3 w-5/6 bg-devroast-border" />
+            <div className="h-3 w-1/2 bg-devroast-border" />
           </div>
-        </div>
-      </section>
+        </section>
+
+        <div className="h-px bg-devroast-border" />
+
+        <section className="flex flex-col gap-4">
+          <div className="h-4 w-44 bg-devroast-border" />
+          <div className="w-full h-[424px] border border-devroast-border bg-devroast-input" />
+        </section>
+
+        <div className="h-px bg-devroast-border" />
+
+        <section className="flex flex-col gap-6">
+          <div className="h-4 w-44 bg-devroast-border" />
+          <div className="h-24 w-full border border-devroast-border bg-devroast-surface" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="h-28 border border-devroast-border bg-devroast-surface" />
+            <div className="h-28 border border-devroast-border bg-devroast-surface" />
+          </div>
+        </section>
+
+        <div className="h-px bg-devroast-border" />
+
+        <section className="flex flex-col gap-6">
+          <div className="h-4 w-40 bg-devroast-border" />
+          <div className="w-full border border-devroast-border bg-devroast-input p-2">
+            <div className="h-6 w-full bg-devroast-border mb-2" />
+            <div className="h-6 w-full bg-devroast-border mb-1" />
+            <div className="h-6 w-full bg-devroast-border mb-1" />
+            <div className="h-6 w-full bg-devroast-border" />
+          </div>
+        </section>
+      </div>
     );
   }
 
