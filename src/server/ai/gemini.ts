@@ -31,6 +31,36 @@ const roastAnalysisSchema = z.object({
 
 export type RoastAnalysis = z.infer<typeof roastAnalysisSchema>;
 
+const SCORE_TIERS = [2, 4, 6, 8, 10] as const;
+
+function standardizeShameScore(analysis: RoastAnalysis) {
+  const priorityWeight: Record<
+    RoastAnalysis["improvements"][number]["priority"],
+    number
+  > = {
+    critical: 5,
+    high: 3,
+    medium: 2,
+    low: 1,
+  };
+
+  const penaltyFromImprovements = analysis.improvements.reduce(
+    (total, item) => {
+      return total + priorityWeight[item.priority];
+    },
+    0,
+  );
+
+  const penalty = Math.round(penaltyFromImprovements / 2);
+  const normalized = Math.max(1, Math.min(10, 10 - penalty));
+
+  if (normalized <= 2) return SCORE_TIERS[0];
+  if (normalized <= 4) return SCORE_TIERS[1];
+  if (normalized <= 6) return SCORE_TIERS[2];
+  if (normalized <= 8) return SCORE_TIERS[3];
+  return SCORE_TIERS[4];
+}
+
 type GeminiConfig = {
   apiKey: string;
   model: string;
@@ -67,6 +97,7 @@ function buildRoastPrompt(params: {
     '{"shameScore": number(1-10), "roastText": string, "technicalFeedback": string, "improvedCode": string, "diffPatch": string|null, "improvements": [{"title": string, "description": string|null, "improvementType": "performance"|"readability"|"security"|"best_practices"|"bug_fix"|"code_style"|"architecture", "priority": "low"|"medium"|"high"|"critical", "lineStart": number|null, "lineEnd": number|null}]}',
     "Rules:",
     "- shameScore must be an integer between 1 and 10.",
+    "- Use this scoring pattern: 2 (critical), 4 (bad), 6 (acceptable), 8 (good), 10 (excellent).",
     "- technicalFeedback should be objective and concise.",
     "- improvedCode must be a full improved version of the submitted code.",
     "- diffPatch should be a unified diff string when possible, otherwise null.",
@@ -126,9 +157,14 @@ export async function generateRoastAnalysis(params: {
     throw new Error("Gemini returned an empty response.");
   }
 
+  const parsed = parseGeminiAnalysis(rawText);
+
   return {
     model,
     rawText,
-    analysis: parseGeminiAnalysis(rawText),
+    analysis: {
+      ...parsed,
+      shameScore: standardizeShameScore(parsed),
+    },
   };
 }

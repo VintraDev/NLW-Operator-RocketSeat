@@ -171,6 +171,23 @@ function createDiffLines(params: {
   return result.slice(0, 18);
 }
 
+function getCompactImprovementTitle(title: string) {
+  const normalized = title.replace(/\s+/g, " ").trim();
+  const noDetails = normalized
+    .split(":")[0]
+    ?.split(" - ")[0]
+    ?.split(" (")[0]
+    ?.trim();
+
+  const compact = noDetails && noDetails.length >= 8 ? noDetails : normalized;
+
+  if (compact.length <= 38) {
+    return compact;
+  }
+
+  return `${compact.slice(0, 35)}...`;
+}
+
 export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
   const trpc = useTRPC();
 
@@ -199,9 +216,6 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
 
   const status = payload?.submission.status;
   const isLoading = !payload || status === "pending" || status === "analyzing";
-  const progressValue = payload?.progress?.value ?? 12;
-  const progressStage = payload?.progress?.stage || "queued";
-  const progressDetails = payload?.progress?.details;
 
   const linesCount = useMemo(() => {
     const code = payload?.submission.originalCode ?? "";
@@ -220,23 +234,12 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
           <Text className="font-mono text-sm text-devroast-green">
             {"// analyzing_your_code"}
           </Text>
-          <Text className="font-[IBM_Plex_Mono] text-xs sm:text-sm text-devroast-text-secondary">
-            segurando o compilador com uma mao e o sarcasmo com a outra...
-          </Text>
-          <div className="h-1 w-full bg-devroast-border overflow-hidden">
-            <div
-              className="h-full bg-devroast-green transition-all duration-500 ease-out"
-              style={{ width: `${progressValue}%` }}
-            />
+          <div className="flex flex-col gap-3 animate-pulse">
+            <div className="h-3 w-60 bg-devroast-border" />
+            <div className="h-3 w-48 bg-devroast-border" />
+            <div className="h-3 w-full bg-devroast-border" />
+            <div className="h-24 w-full bg-devroast-input border border-devroast-border" />
           </div>
-          <Text className="font-mono text-xs text-devroast-text-muted">
-            {`progress: ${progressValue}% | stage: ${progressStage}`}
-          </Text>
-          {progressDetails ? (
-            <Text className="font-[IBM_Plex_Mono] text-xs text-devroast-text-muted">
-              {progressDetails}
-            </Text>
-          ) : null}
         </div>
       </section>
     );
@@ -353,7 +356,7 @@ export function ResultsPageClient({ roastId }: ResultsPageClientProps) {
               <AnalysisCard
                 key={improvement.id}
                 severity={getCardSeverity(improvement.priority)}
-                title={improvement.title}
+                title={getCompactImprovementTitle(improvement.title)}
                 description={[
                   `priority: ${improvement.priority}`,
                   improvement.lineStart
