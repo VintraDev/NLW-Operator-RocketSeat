@@ -38,7 +38,10 @@ function createDeterministicSeed(input: string) {
     hash = (hash * 31 + input.charCodeAt(index)) >>> 0;
   }
 
-  return hash || 1;
+  // Gemini expects seed as int32 (max 2147483647)
+  const int32Seed = hash % 2147483647;
+
+  return int32Seed || 1;
 }
 
 type GeminiConfig = {
