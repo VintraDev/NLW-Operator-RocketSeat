@@ -44,6 +44,18 @@ function createDeterministicSeed(input: string) {
   return int32Seed || 1;
 }
 
+function compactRoastText(roastText: string) {
+  const normalized = roastText.replace(/\s+/g, " ").trim();
+  const firstSentenceMatch = normalized.match(/^(.+?[.!?])(?:\s|$)/);
+  const firstSentence = firstSentenceMatch?.[1] || normalized;
+
+  if (firstSentence.length <= 110) {
+    return firstSentence;
+  }
+
+  return `${firstSentence.slice(0, 107).trimEnd()}...`;
+}
+
 type GeminiConfig = {
   apiKey: string;
   model: string;
@@ -86,6 +98,7 @@ function buildRoastPrompt(params: {
     "  - best practices and safety (0-3)",
     "- Always map the same technical findings to the same score band.",
     "- technicalFeedback should be objective and concise.",
+    "- roastText must be one short punchline sentence (max 110 chars).",
     "- improvedCode must be a full improved version of the submitted code.",
     "- diffPatch should be a unified diff string when possible, otherwise null.",
     "- improvements should include only actionable suggestions.",
@@ -154,9 +167,14 @@ export async function generateRoastAnalysis(params: {
     throw new Error("Gemini returned an empty response.");
   }
 
+  const parsed = parseGeminiAnalysis(rawText);
+
   return {
     model,
     rawText,
-    analysis: parseGeminiAnalysis(rawText),
+    analysis: {
+      ...parsed,
+      roastText: compactRoastText(parsed.roastText),
+    },
   };
 }
