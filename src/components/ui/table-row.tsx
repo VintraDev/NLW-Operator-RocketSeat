@@ -16,7 +16,7 @@ const tableRowVariants = tv({
 });
 
 const tableCellVariants = tv({
-  base: "flex items-center",
+  base: "flex items-center min-w-0",
   variants: {
     align: {
       left: "justify-start text-left",
@@ -355,8 +355,8 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
                     data-code="true"
                     className={`text-devroast-text-secondary font-mono text-xs ${
                       expandCode
-                        ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap wrap-break-word"
-                        : "truncate"
+                        ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap break-words"
+                        : "block w-full truncate"
                     }`}
                   >
                     {code}
@@ -413,8 +413,8 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
               data-code="true"
               className={`text-devroast-text-secondary font-mono text-xs ${
                 expandCode
-                  ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap wrap-break-word"
-                  : "truncate"
+                  ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap break-words"
+                  : "block w-full truncate"
               }`}
             >
               {code}
