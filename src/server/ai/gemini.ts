@@ -22,7 +22,7 @@ const analysisImprovementSchema = z.object({
 
 const roastAnalysisSchema = z.object({
   shameScore: z.number().int().min(1).max(10),
-  roastText: z.string().min(1),
+  roastText: z.string().min(1).max(110),
   technicalFeedback: z.string().min(1),
   improvedCode: z.string().optional().default(""),
   diffPatch: z.string().nullable().optional().default(null),
@@ -42,18 +42,6 @@ function createDeterministicSeed(input: string) {
   const int32Seed = hash % 2147483647;
 
   return int32Seed || 1;
-}
-
-function compactRoastText(roastText: string) {
-  const normalized = roastText.replace(/\s+/g, " ").trim();
-  const firstSentenceMatch = normalized.match(/^(.+?[.!?])(?:\s|$)/);
-  const firstSentence = firstSentenceMatch?.[1] || normalized;
-
-  if (firstSentence.length <= 110) {
-    return firstSentence;
-  }
-
-  return `${firstSentence.slice(0, 107).trimEnd()}...`;
 }
 
 type GeminiConfig = {
@@ -98,7 +86,8 @@ function buildRoastPrompt(params: {
     "  - best practices and safety (0-3)",
     "- Always map the same technical findings to the same score band.",
     "- technicalFeedback should be objective and concise.",
-    "- roastText must be one short punchline sentence (max 110 chars).",
+    "- roastText must be exactly one sentence with max 110 characters.",
+    "- Do not include second sentence, explanation, or extra commentary in roastText.",
     "- improvedCode must be a full improved version of the submitted code.",
     "- diffPatch should be a unified diff string when possible, otherwise null.",
     "- improvements should include only actionable suggestions.",
@@ -172,9 +161,6 @@ export async function generateRoastAnalysis(params: {
   return {
     model,
     rawText,
-    analysis: {
-      ...parsed,
-      roastText: compactRoastText(parsed.roastText),
-    },
+    analysis: parsed,
   };
 }
