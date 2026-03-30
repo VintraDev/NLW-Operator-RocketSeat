@@ -240,7 +240,7 @@ const LeaderboardCard = React.forwardRef<HTMLDivElement, LeaderboardCardProps>(
           data-code="true"
           className={`${codeBlock()} ${
             expandCode
-              ? "max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap break-words"
+              ? "max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap wrap-break-word"
               : ""
           }`}
         >
@@ -355,7 +355,7 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
                     data-code="true"
                     className={`text-devroast-text-secondary font-mono text-xs ${
                       expandCode
-                        ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap break-words"
+                        ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap wrap-break-word"
                         : "truncate"
                     }`}
                   >
@@ -413,7 +413,7 @@ const LeaderboardRow = React.forwardRef<HTMLDivElement, LeaderboardRowProps>(
               data-code="true"
               className={`text-devroast-text-secondary font-mono text-xs ${
                 expandCode
-                  ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap break-words"
+                  ? "block w-full max-h-52 overflow-auto devroast-scrollbar whitespace-pre-wrap wrap-break-word"
                   : "truncate"
               }`}
             >
